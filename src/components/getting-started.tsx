@@ -5,9 +5,11 @@ import { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Rocket, File, Upload, Link as LinkIcon, X } from "lucide-react"
+import { useAnalysisStore } from "@/lib/store"
+import { AnalysisData } from "@/components/main-content"
 
 interface GettingStartedProps {
-  onAnalyze: (data: { type: "url" | "file"; content: string; fileName?: string }) => void
+  onAnalyze: (data: AnalysisData) => void
 }
 
 export function GettingStarted({ onAnalyze }: GettingStartedProps) {
@@ -16,6 +18,10 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Получаем функции из Zustand store
+  const setAnalysisData = useAnalysisStore(state => state.setAnalysisData)
+  const startAnalysis = useAnalysisStore(state => state.startAnalysis)
 
   const handleFileChange = (selectedFile: File | null) => {
     setUploadError(null)
@@ -86,8 +92,18 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
     if (url) {
       // Validate URL format
       try {
-        new URL(url.startsWith('http') ? url : `https://${url}`)
-        onAnalyze({ type: "url", content: url })
+        const normalizedUrl = url.startsWith('http') ? url : `https://${url}`
+        new URL(normalizedUrl)
+        const data: AnalysisData = { type: "url", content: normalizedUrl }
+        
+        // Сохраняем данные в store
+        setAnalysisData(data)
+        
+        // Переходим на страницу результатов
+        onAnalyze(data)
+        
+        // Сразу запускаем анализ
+        startAnalysis()
       } catch {
         setUploadError("Please enter a valid URL")
       }
@@ -95,7 +111,16 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
       try {
         // For CSV and PDF, we'll read the file content
         const content = await file.text()
-        onAnalyze({ type: "file", content, fileName: file.name })
+        const data: AnalysisData = { type: "file", content, fileName: file.name }
+        
+        // Сохраняем данные в store
+        setAnalysisData(data)
+        
+        // Переходим на страницу результатов
+        onAnalyze(data)
+        
+        // Сразу запускаем анализ
+        startAnalysis()
       } catch {
         setUploadError("Error reading file. Please try again.")
       }

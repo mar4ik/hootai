@@ -1,45 +1,34 @@
-import { generateText } from 'ai'
+import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { AnalysisData } from '@/components/main-content'
+import { z } from 'zod'
 
-export interface AnalysisResult {
-  summary: string
-  problems: {
-    title: string
-    description: string
-  }[]
-  issues: {
-    id: number
-    title: string
-    observation: string
-    impact: string
-    suggestion?: string
-  }[]
-}
+// Define Zod schema for type safety
+const AnalysisResultSchema = z.object({
+  summary: z.string(),
+  problems: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string()
+    })
+  ),
+  issues: z.array(
+    z.object({
+      id: z.number(),
+      title: z.string(),
+      observation: z.string(),
+      impact: z.string(),
+      suggestion: z.string().optional()
+    })
+  )
+})
+
+// Export the TypeScript type derived from the Zod schema
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>
 
 const UX_ANALYSIS_PROMPT = `
 You are a professional UX analyst reviewing a website or product data.
 Analyze the provided content and identify UX issues, problems, and potential improvements.
-
-Format your response as a JSON object with the following structure:
-{
-  "summary": "A brief summary of the overall UX analysis",
-  "problems": [
-    {
-      "title": "Short problem title",
-      "description": "Detailed description of the problem"
-    }
-  ],
-  "issues": [
-    {
-      "id": 1,
-      "title": "Issue title",
-      "observation": "What you observed",
-      "impact": "How this impacts users",
-      "suggestion": "Optional suggestion for improvement"
-    }
-  ]
-}
 
 Limit your analysis to 3-5 key problems and issues.
 Provide specific, actionable insights based on UX best practices.
@@ -75,20 +64,16 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       }
     }
 
-    // Using ai-sdk to generate text with JSON output
-    const { text } = await generateText({
+    // Using ai-sdk to generate structured object with the schema
+    const { object } = await generateObject({
       model: openai('gpt-4o'),
-      prompt: analysisPrompt + "\n\nRemember to format your response as a valid JSON object according to the structure provided.",
+      prompt: analysisPrompt,
+      schema: AnalysisResultSchema,
       temperature: 0.2,
       maxTokens: 2000,
     })
 
-    try {
-      return JSON.parse(text) as AnalysisResult
-    } catch (parseError) {
-      console.error('Error parsing JSON response:', parseError)
-      throw new Error('Failed to parse AI response as JSON')
-    }
+    return object
   } catch (error) {
     console.error('Error analyzing content:', error)
     // Return a default error result

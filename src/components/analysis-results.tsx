@@ -1,60 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { ArrowLeft, Search, Target, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AnalysisData } from "./main-content"
-import { AnalysisResult } from "@/lib/ai-service"
+import { useAnalysisStore } from "@/lib/store"
 
 interface AnalysisResultsProps {
-  data: AnalysisData
   onStartOver: () => void
 }
 
-export function AnalysisResults({ data, onStartOver }: AnalysisResultsProps) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<AnalysisResult | null>(null)
-
-  useEffect(() => {
-    async function performAnalysis() {
-      setIsLoading(true)
-      setError(null)
-      
-      try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Analysis failed')
-        }
-
-        const analysisResult = await response.json()
-        setResult(analysisResult)
-      } catch (err) {
-        setError("Failed to analyze content. Please try again.")
-        console.error("Analysis error:", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    performAnalysis()
-  }, [data])
+export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
+  const { 
+    analysisData, 
+    result, 
+    isLoading, 
+    error, 
+    startAnalysis 
+  } = useAnalysisStore()
 
   const renderSourceInfo = () => {
-    if (data.type === "url") {
+    if (!analysisData) return null;
+    
+    if (analysisData.type === "url") {
       return (
         <div className="flex items-center gap-2 text-xl font-semibold">
           <Search className="h-5 w-5" />
           <h2>
-            UX Analysis of <span className="text-blue-600">{data.content}</span>
+            UX Analysis of <span className="text-blue-600">{analysisData.content}</span>
           </h2>
         </div>
       )
@@ -63,7 +34,7 @@ export function AnalysisResults({ data, onStartOver }: AnalysisResultsProps) {
         <div className="flex items-center gap-2 text-xl font-semibold">
           <File className="h-5 w-5" />
           <h2>
-            UX Analysis of <span className="text-blue-600">{data.fileName || "uploaded file"}</span>
+            UX Analysis of <span className="text-blue-600">{analysisData.fileName || "uploaded file"}</span>
           </h2>
         </div>
       )
@@ -86,14 +57,33 @@ export function AnalysisResults({ data, onStartOver }: AnalysisResultsProps) {
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <h2 className="text-xl font-medium text-red-800 mb-2">Analysis Failed</h2>
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={onStartOver} variant="outline">Try Again</Button>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={() => startAnalysis()} 
+              variant="default"
+            >
+              Try Again
+            </Button>
+            <Button 
+              onClick={onStartOver} 
+              variant="outline"
+            >
+              Start Over
+            </Button>
+          </div>
         </div>
       </div>
     )
   }
 
   if (!result) {
-    return null
+    return (
+      <div className="max-w-3xl mx-auto p-8 flex flex-col items-center justify-center h-[80vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <h2 className="text-xl font-medium">Preparing analysis...</h2>
+        <p className="text-muted-foreground mt-2">Just a moment...</p>
+      </div>
+    )
   }
 
   return (
