@@ -23,8 +23,12 @@ export default function WhatIsNextContent() {
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would send the data to an API endpoint
-      // await fetch('/api/feedback', { method: 'POST', body: JSON.stringify(formData) });
+      // In a real app, this would send an email to mariam.morozova@gmail.com
+      // Simulating email submission
+      console.log(`Sending feedback to mariam.morozova@gmail.com:
+        From: ${formData.name} (${formData.email})
+        Message: ${formData.message}
+      `);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -143,6 +147,8 @@ export default function WhatIsNextContent() {
               required
             />
           </div>
+          
+          <input type="hidden" name="recipient" value="mariam.morozova@gmail.com" />
           
           <Button 
             type="submit" 

@@ -15,6 +15,12 @@ const istokWeb = Istok_Web({
 export const metadata: Metadata = {
   title: "Hoot.ai - UX/UI Analysis Tool",
   description: "Unlock UX Insights Instantly with Hoot.ai",
+  icons: {
+    icon: [
+      { url: '/owl-emoji.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ]
+  }
 }
 
 export default function RootLayout({
@@ -24,6 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/owl-emoji.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" />
+      </head>
       <body className={`${inter.className} ${istokWeb.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
