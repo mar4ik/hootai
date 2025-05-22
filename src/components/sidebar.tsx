@@ -56,7 +56,7 @@ export function Sidebar() {
           <span>Getting started</span>
         </Link>
         <Link
-          href="/coming-next"
+          href="/what_is_next"
           className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
         >
           <Leaf className="h-5 w-5" />
@@ -67,7 +67,7 @@ export function Sidebar() {
           <span>About Hoot.ai</span>
         </Link>
         <Link
-          href="/wall-of-fame"
+          href="/wall_of_fame"
           className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
         >
           <Heart className="h-5 w-5" />

@@ -128,46 +128,48 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <div className="space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Rocket className="h-8 w-8" /> Getting started
-          </h1>
-          <h2 className="text-xl font-medium">Unlock UX Insights Instantly with 🦉 Hoot.ai</h2>
-        </div>
+    <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto bg-gray-50 font-istok">
+      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-5 sm:p-6 md:p-8 my-4 sm:my-6">
+        <div className="space-y-6 mb-8">
+          <div className="space-y-2">
+            <h1 className="text-[24px] font-bold flex items-center gap-2">
+              <Rocket className="h-6 w-6" /> Getting started
+            </h1>
+            <h2 className="text-lg font-medium">Unlock UX Insights Instantly with 🦉 Hoot.ai</h2>
+          </div>
 
-        <div className="space-y-4">
-          <p className="text-lg">Start optimizing your product experience in minutes.</p>
-          <p className="text-lg">
-            <strong>Upload your CSV or PDF product data</strong>, or just enter your <strong>website URL</strong>.
-          </p>
+          <div className="space-y-4">
+            <p className="text-[14px] text-gray-800">Start optimizing your product experience in minutes.</p>
+            <p className="text-[14px] text-gray-800">
+              <strong>Upload your CSV or PDF product data</strong>, or just enter your <strong>website URL</strong>.
+            </p>
 
-          <p className="text-muted-foreground">
-            Hoot.ai will analyze user behavior, detect friction points, and give you actionable UX insights powered by
-            AI.
-          </p>
+            <p className="text-[14px] text-gray-600">
+              Hoot.ai will analyze user behavior, detect friction points, and give you actionable UX insights powered by
+              AI.
+            </p>
 
-          <div className="bg-muted/30 p-4 rounded-lg">
-            <p className="font-medium">No setup. No code. Just clear answers.</p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
+              <p className="font-medium text-[14px]">No setup. No code. Just clear answers.</p>
+            </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {!file && (
             <div className="flex flex-col gap-4">
               <div 
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300'
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <Upload className="h-10 w-10 text-gray-400" />
-                  <p className="text-lg font-medium">Drag & drop your file here</p>
-                  <p className="text-sm text-muted-foreground">Supports CSV and PDF (up to 5MB)</p>
+                  <Upload className="h-8 w-8 text-gray-400" />
+                  <p className="text-base font-medium">Drag & drop your file here</p>
+                  <p className="text-[14px] text-gray-600">Supports CSV and PDF (up to 5MB)</p>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -178,7 +180,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="mt-2"
+                    className="mt-2 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400"
                     onClick={handleButtonClick}
                   >
                     <File className="h-4 w-4 mr-2" />
@@ -189,7 +191,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
 
               <div className="flex items-center">
                 <div className="flex-grow h-px bg-gray-200"></div>
-                <span className="px-4 text-muted-foreground text-sm">or</span>
+                <span className="px-4 text-gray-500 text-[14px]">or</span>
                 <div className="flex-grow h-px bg-gray-200"></div>
               </div>
 
@@ -198,7 +200,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 <Input
                   type="text"
                   placeholder="Enter website URL here"
-                  className="h-12 flex-1"
+                  className="h-12 flex-1 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                   value={url}
                   onChange={(e) => {
                     setUrl(e.target.value)
@@ -210,12 +212,12 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           )}
 
           {file && (
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
               <div className="flex items-center gap-3">
-                <File className="h-6 w-6 text-blue-500" />
+                <File className="h-6 w-6 text-indigo-500" />
                 <div>
-                  <p className="font-medium">{file.name}</p>
-                  <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="font-medium text-[14px]">{file.name}</p>
+                  <p className="text-[14px] text-gray-600">{(file.size / 1024).toFixed(1)} KB</p>
                 </div>
               </div>
               <Button 
@@ -231,14 +233,14 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           )}
 
           {uploadError && (
-            <div className="text-red-500 text-sm p-2 bg-red-50 rounded border border-red-100">
+            <div className="text-red-500 text-[14px] p-3 bg-red-50 rounded-lg border border-red-200 shadow-sm">
               {uploadError}
             </div>
           )}
 
           <Button
             type="submit"
-            className="w-full h-12 text-lg bg-purple-100 hover:bg-purple-200 text-purple-900"
+            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
             disabled={!url && !file}
           >
             Run Hoot.ai
