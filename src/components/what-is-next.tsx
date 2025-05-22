@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Input } from "./ui/input"
-// @ts-expect-error - Using component
 import { Textarea } from "./ui/textarea"
 import { Button } from "./ui/button"
 
