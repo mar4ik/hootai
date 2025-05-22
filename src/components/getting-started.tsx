@@ -4,7 +4,6 @@ import type React from "react"
 import { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Rocket, File, Upload, Link as LinkIcon, X } from "lucide-react"
 import { useAnalysisStore } from "@/lib/store"
 import { AnalysisData } from "@/components/main-content"
 
@@ -133,7 +132,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
         <div className="space-y-6 mb-8">
           <div className="space-y-2">
             <h1 className="text-[24px] font-bold flex items-center gap-2">
-              <Rocket className="h-6 w-6" /> Getting started
+              <span className="text-xl">🚀</span> Getting started
             </h1>
             <h2 className="text-lg font-medium">Unlock UX Insights Instantly with 🦉 Hoot.ai</h2>
           </div>
@@ -167,7 +166,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 onDrop={handleDrop}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <Upload className="h-8 w-8 text-gray-400" />
+                  <span className="text-3xl text-gray-400">📤</span>
                   <p className="text-base font-medium">Drag & drop your file here</p>
                   <p className="text-[14px] text-gray-600">Supports CSV and PDF (up to 5MB)</p>
                   <input
@@ -183,7 +182,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                     className="mt-2 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400"
                     onClick={handleButtonClick}
                   >
-                    <File className="h-4 w-4 mr-2" />
+                    <span className="text-base mr-2">📄</span>
                     Browse files
                   </Button>
                 </div>
@@ -196,7 +195,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
               </div>
 
               <div className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-gray-400" />
+                <span className="text-xl text-gray-400">🔗</span>
                 <Input
                   type="text"
                   placeholder="Enter website URL here"
@@ -214,7 +213,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           {file && (
             <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
               <div className="flex items-center gap-3">
-                <File className="h-6 w-6 text-indigo-500" />
+                <span className="text-xl text-indigo-500">📄</span>
                 <div>
                   <p className="font-medium text-[14px]">{file.name}</p>
                   <p className="text-[14px] text-gray-600">{(file.size / 1024).toFixed(1)} KB</p>
@@ -227,7 +226,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 className="h-8 w-8 p-0" 
                 onClick={handleRemoveFile}
               >
-                <X className="h-5 w-5" />
+                <span className="text-base">❌</span>
               </Button>
             </div>
           )}

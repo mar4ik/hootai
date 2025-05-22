@@ -60,13 +60,13 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           <div className="flex gap-4 justify-center">
             <Button 
               onClick={() => startAnalysis()} 
-              variant="default"
+              className="p-2.5 sm:p-3 text-base rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50"
             >
               Try Again
             </Button>
             <Button 
               onClick={onStartOver} 
-              variant="outline"
+              className="p-2.5 sm:p-3 text-base rounded-lg shadow-md transition-all hover:shadow-lg bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50"
             >
               Start Over
             </Button>
@@ -93,7 +93,10 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           <span className="text-2xl">😊</span>
           <h1 className="text-3xl font-bold">Analysis</h1>
         </div>
-        <Button variant="ghost" onClick={onStartOver} className="flex items-center gap-1">
+        <Button 
+          onClick={onStartOver} 
+          className="flex items-center gap-1 p-2 rounded-lg shadow-sm hover:bg-gray-100 transition-all"
+        >
           <ArrowLeft className="h-4 w-4" />
           Start over
         </Button>

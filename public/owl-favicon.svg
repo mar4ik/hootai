@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Owl Favicon</title>
+  <style>
+    .owl-body { fill: #8c6239; }
+    .owl-chest { fill: #d9d0c7; }
+    .owl-eye { fill: #ffcc00; }
+    .owl-pupil { fill: #000000; }
+    .owl-beak { fill: #333333; }
+  </style>
+  <g transform="translate(10, 5) scale(0.8)">
+    <!-- Owl body -->
+    <path class="owl-body" d="M50,10 C25,10 10,30 10,60 C10,85 25,95 50,95 C75,95 90,85 90,60 C90,30 75,10 50,10 Z" />
+    
+    <!-- Owl chest -->
+    <ellipse class="owl-chest" cx="50" cy="65" rx="25" ry="30" />
+    
+    <!-- Owl ears -->
+    <path class="owl-body" d="M30,15 L20,5 L25,20 Z" />
+    <path class="owl-body" d="M70,15 L80,5 L75,20 Z" />
+    
+    <!-- Owl eyes -->
+    <circle class="owl-eye" cx="35" cy="40" r="12" />
+    <circle class="owl-eye" cx="65" cy="40" r="12" />
+    
+    <!-- Owl pupils -->
+    <circle class="owl-pupil" cx="35" cy="40" r="6" />
+    <circle class="owl-pupil" cx="65" cy="40" r="6" />
+    
+    <!-- Owl beak -->
+    <path class="owl-beak" d="M45,55 L55,55 L50,65 Z" />
+    
+    <!-- Owl feet -->
+    <path class="owl-body" d="M40,95 L35,100 L45,100 Z" />
+    <path class="owl-body" d="M60,95 L55,100 L65,100 Z" />
+  </g>
+</svg> 

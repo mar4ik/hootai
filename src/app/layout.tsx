@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Unlock UX Insights Instantly with Hoot.ai",
   icons: {
     icon: [
-      { url: '/owl-emoji.svg', type: 'image/svg+xml' },
+      { url: '/owl-favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon.ico', sizes: 'any' }
     ]
   }
@@ -29,13 +29,23 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/owl-emoji.svg" type="image/svg+xml" />
+        <link rel="icon" href="/owl-favicon.svg" type="image/svg+xml" />
         <link rel="alternate icon" href="/favicon.ico" />
+        <script 
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                document.documentElement.classList.add('light');
+                document.documentElement.style.colorScheme = 'light';
+              })()
+            `
+          }}
+        />
       </head>
       <body className={`${inter.className} ${istokWeb.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider>
           <AuthProvider>
             {children}
           </AuthProvider>

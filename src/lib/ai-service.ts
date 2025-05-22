@@ -27,11 +27,12 @@ const AnalysisResultSchema = z.object({
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>
 
 const UX_ANALYSIS_PROMPT = `
-You are a professional UX analyst reviewing a website or product data.
-Analyze the provided content and identify UX issues, problems, and potential improvements.
-
-Limit your analysis to 3-5 key problems and issues.
-Provide specific, actionable insights based on UX best practices.
+Act as a UX data analyst and a UI expert. Here's is a website link.
+Identify broken flows and user frustration. Then, summarize your findings and suggest
+3 UX changes that could improve user experience for this specific case.
+Suggest how much this flow will improve after adding your improvements.
+Create a priority list of improvements what goes first what next, mark as critical, medium, low.
+create an A/B test plan.
 `
 
 export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult> {

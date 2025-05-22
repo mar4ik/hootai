@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Input } from "./ui/input"
 // @ts-ignore - Using newly created component
 import { Textarea } from "./ui/textarea"
@@ -12,6 +12,13 @@ export default function AboutContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Check if any field is filled to enable the submit button
+  useEffect(() => {
+    const hasValue = Object.values(formData).some(value => value.trim() !== '');
+    setIsFormValid(hasValue);
+  }, [formData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -53,10 +60,10 @@ export default function AboutContent() {
         </h1>
         
         <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10">
-          <h1 className="text-[14px] text-gray-800 font-normal">
+          <h2 className="text-[14px] text-gray-800 font-normal">
             It all started with a mission to help anyone building amazing products quickly 
             find user gaps and improve UX.
-          </h1>
+          </h2>
           
           <p className="text-[14px] text-gray-800">
             Hoot.ai connects to your tools and uses AI to spot issues and suggest fixes, 
@@ -64,14 +71,14 @@ export default function AboutContent() {
           </p>
           
           <p className="text-[14px] flex items-center text-gray-800">
-            We're still shaping Hoot.ai, so your feedback and ideas really matter <span className="text-red-500 ml-1">❤️</span>
+            We&apos;re still shaping Hoot.ai, so your feedback and ideas really matter <span className="text-red-500 ml-1">❤️</span>
           </p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {submitSuccess && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 shadow-sm text-sm sm:text-base">
-              Thank you for your feedback! We'll get back to you soon.
+              Thank you for your feedback! We&apos;ll get back to you soon.
             </div>
           )}
           
@@ -116,8 +123,8 @@ export default function AboutContent() {
           
           <Button 
             type="submit" 
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
-            disabled={isSubmitting}
+            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
+            disabled={isSubmitting || !isFormValid}
           >
             {isSubmitting ? 'Sending...' : 'Send your feedback'}
           </Button>
