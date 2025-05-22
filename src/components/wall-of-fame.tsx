@@ -17,7 +17,7 @@ export default function WallOfFameContent() {
             </h2>
             
             <p className="text-[14px] text-gray-800 leading-relaxed">
-              A big thank you to Ivan Bunin, an AI guru engineer who helped develop Hoot.ai's concept car! <span className="inline-block">🎉</span>
+              A big thank you to Ivan Bunin, an AI guru engineer who helped develop Hoot.ai&apos;s concept car! <span className="inline-block">🎉</span>
             </p>
             
             <div className="mt-8">
@@ -29,7 +29,7 @@ export default function WallOfFameContent() {
                   rel="noopener noreferrer"
                   className="text-[14px] text-blue-600 hover:underline font-medium"
                 >
-                  Ivan's Linkedin profile
+                  Ivan&apos;s Linkedin profile
                 </Link>
                 <span className="text-[14px] text-gray-800">and his personal project</span>
               </div>
