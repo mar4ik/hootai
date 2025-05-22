@@ -1,14 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { useAuth } from "@/lib/auth-context"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
 
 export function Sidebar() {
-  const { user, loading } = useAuth()
-
   return (
     <div className="w-64 border-r bg-background h-full flex flex-col">
       <div className="p-4 border-b">
