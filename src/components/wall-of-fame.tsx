@@ -13,7 +13,7 @@ export default function WallOfFameContent() {
           {/* Contributor Card */}
           <div className="space-y-5">
             <h2 className="text-xl font-semibold flex items-center">
-              <span className="mr-2">👑</span> Kudos to Ivan Bunin
+              <span className="mr-2">🎉</span> Kudos to Ivan Bunin
             </h2>
             
             <p className="text-[14px] text-gray-800 leading-relaxed">

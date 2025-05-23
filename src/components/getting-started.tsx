@@ -148,9 +148,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
               AI.
             </p>
 
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm">
-              <p className="font-medium text-[14px]">No setup. No code. Just clear answers.</p>
-            </div>
+            <p className="text-[14px] text-gray-800">No setup. No code. Just clear answers.</p>
           </div>
         </div>
 

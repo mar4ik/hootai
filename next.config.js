@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     domains: ["localhost"],
   },
+
   // Suppress specific deprecation warnings
   webpack: (config, { isServer }) => {
     // Ignore the node-domexception deprecation warning
@@ -14,4 +15,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;
