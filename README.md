@@ -9,8 +9,9 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Supabase Configuration - required for authentication
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here (https://eaennrqqtlmanbivdhqm.supabase.co)
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here process.env.SUPABASE_KEY
+https://vercel.com/mariam-morozovas-projects/hootai/settings/environments/production
 ```
 
 2. Install dependencies:
