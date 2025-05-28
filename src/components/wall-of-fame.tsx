@@ -17,7 +17,7 @@ export default function WallOfFameContent() {
             </h2>
             
             <p className="text-[14px] text-gray-800 leading-relaxed">
-              A big thank you to Ivan Bunin, an AI guru engineer who helped develop Hoot.ai&apos;s concept car! <span className="inline-block">🎉</span>
+              A big thank you to Ivan Bunin, an AI guru engineer who helped to develop Hoot.ai&apos;s concept car! <span className="inline-block">🎉</span>
             </p>
             
             <div className="mt-8">
