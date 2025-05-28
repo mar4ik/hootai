@@ -136,9 +136,22 @@ export function Sidebar() {
                 mariam.morozova@gmail.com
               </a>
             </p>
-            <a href='https://ko-fi.com/U6U31FN5A7' target='_blank'>
-              <img height='46' style={{border:0, marginTop: '1em'}} src='https://storage.ko-fi.com/cdn/kofi2.png?v=6' alt='Buy Me a Coffee at ko-fi.com' />
+            <a href="https://ko-fi.com/U6U31FN5A7" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: '#FFDA6E',
+                color: '#202020',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 13px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                marginTop: '1em',
+                cursor: 'pointer'
+              }}>
+                ❤️ Help me build Hoot.ai
+            </button>
             </a>
+
           </div>
         </div>
       </div>

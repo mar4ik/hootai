@@ -134,10 +134,23 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
           </Button>
           </div>
         </form>
-        <div style={{maxWidth: '50%', margin: '3em auto', alignItems: 'center'}}>
-        <a href='https://ko-fi.com/U6U31FN5A7' target='_blank'>
-              <img width='200' style={{border:0, margin: '1em auto'}} src='https://storage.ko-fi.com/cdn/kofi2.png?v=6' alt='Buy Me a Coffee at ko-fi.com' />
+        <div style={{maxWidth: '50%', margin: '3em auto', textAlign: 'center'}}>
+        <a href="https://ko-fi.com/U6U31FN5A7" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: '#FFDA6E',
+                color: '#202020',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 13px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                margin: '1em auto',
+                cursor: 'pointer'
+              }}>
+                ❤️ Help me build Hoot.ai
+            </button>
             </a>
+
         </div>
       </div>
     </div>
