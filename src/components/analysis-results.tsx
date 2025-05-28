@@ -25,7 +25,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
         <div className="flex items-center gap-2 text-xl font-semibold">
           <Search className="h-5 w-5" />
           <h2>
-            UX Analysis of <span className="text-blue-600">{analysisData.content}</span>
+            UX Analysis of <a className="text-blue-600" href={analysisData.content} target="_blank" rel="noopener noreferrer">{analysisData.content}</a>
           </h2>
         </div>
       )
@@ -34,7 +34,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
         <div className="flex items-center gap-2 text-xl font-semibold">
           <File className="h-5 w-5" />
           <h2>
-            UX Analysis of <span className="text-blue-600">{analysisData.fileName || "uploaded file"}</span>
+            UX Analysis of <a className="text-blue-600" href={analysisData.content} target="_blank" rel="noopener noreferrer">{analysisData.fileName || "uploaded file"}</a>
           </h2>
         </div>
       )
