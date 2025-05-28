@@ -60,7 +60,7 @@ export default function AboutContent() {
         
         <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10">
           <h2 className="text-[14px] text-gray-800 font-normal">
-          👋 Hey I&apos;m building Hoot.ai a tool that helps UX and product folks spot the actual problems in their software (not just vague charts and heatmaps). It uses AI to find patterns in user data and tells you where things are going wrong  so you can fix it before your users rage-quit.
+          👋 Hey we are building Hoot.ai a tool that helps UX and product folks spot the actual problems in their software (not just vague charts and heatmaps). It uses AI to find patterns in user data and tells you where things are going wrong  so you can fix it before your users rage-quit.
 
 If you donate It helps me keep building, testing, and occasionally sleeping.
             {/* It all started with a mission to help anyone building amazing products quickly 
@@ -147,7 +147,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
                 margin: '1em auto',
                 cursor: 'pointer'
               }}>
-                ❤️ Help me build Hoot.ai
+                ❤️ Help us build Hoot.ai
             </button>
             </a>
 

@@ -128,7 +128,7 @@ export function Sidebar() {
               <span className="text-lg">🍀</span> Find this interesting?
             </h3>
             <p className="text-sm text-muted-foreground">
-              I&apos;m still looking for people who want to join me in building this awesome product.
+              We are still looking for people who want to join me in building this awesome product.
             </p>
             <p className="text-sm text-muted-foreground mb-4">
               If you&apos;re interested, email me at{" "}
@@ -148,7 +148,7 @@ export function Sidebar() {
                 marginTop: '1em',
                 cursor: 'pointer'
               }}>
-                ❤️ Help me build Hoot.ai
+                ❤️ Help us build Hoot.ai
             </button>
             </a>
 
