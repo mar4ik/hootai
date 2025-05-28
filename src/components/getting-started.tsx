@@ -176,7 +176,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="mt-2 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400"
+                    className="mt-2 border border-gray-300 rounded-lg hover:border-gray-400"
                     onClick={handleButtonClick}
                   >
                     <span className="text-base mr-2">📄</span>
@@ -196,7 +196,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 <Input
                   type="text"
                   placeholder="Enter website URL here"
-                  className="h-12 flex-1 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                  className="h-12 flex-1 border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                   value={url}
                   onChange={(e) => {
                     setUrl(e.target.value)
@@ -208,7 +208,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           )}
 
           {file && (
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-gray-50">
               <div className="flex items-center gap-3">
                 <span className="text-xl text-indigo-500">📄</span>
                 <div>
@@ -229,11 +229,11 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           )}
 
           {uploadError && (
-            <div className="text-red-500 text-[14px] p-3 bg-red-50 rounded-lg border border-red-200 shadow-sm">
+            <div className="text-red-500 text-[14px] p-3 bg-red-50 rounded-lg border border-red-200">
               {uploadError}
             </div>
           )}
-
+       <div style={{maxWidth: '50%', margin: '3em auto'}}>
           <Button
             type="submit"
             className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
@@ -241,6 +241,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           >
             Run Hoot.ai
           </Button>
+          </div>
         </form>
       </div>
     </div>

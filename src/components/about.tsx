@@ -90,7 +90,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             <Input 
               id="name" 
               placeholder="Enter your name here" 
-              className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               value={formData.name}
               onChange={handleChange}
               required
@@ -103,7 +103,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
               id="email" 
               type="email" 
               placeholder="Enter your email here" 
-              className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               value={formData.email}
               onChange={handleChange}
               required
@@ -115,7 +115,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             <Textarea 
               id="message" 
               placeholder="Enter your message here" 
-              className="w-full p-2 sm:p-3 text-sm sm:text-base min-h-24 sm:min-h-32 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              className="w-full p-2 sm:p-3 text-sm sm:text-base min-h-24 sm:min-h-32 border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               value={formData.message}
               onChange={handleChange}
               required
