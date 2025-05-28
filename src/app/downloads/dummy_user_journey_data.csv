@@ -1,0 +1,11 @@
+SessionID,UserID,Timestamp,PageURL,Action,Referrer
+S001,U123,2025-05-28 10:01:03,https://example.com/,Page View,
+S001,U123,2025-05-28 10:01:10,https://example.com/about,Click,https://example.com/
+S001,U123,2025-05-28 10:01:25,https://example.com/contact,Click,https://example.com/about
+S002,U456,2025-05-28 10:02:15,https://example.com/,Page View,
+S002,U456,2025-05-28 10:02:45,https://example.com/pricing,Click,https://example.com/
+S002,U456,2025-05-28 10:03:12,https://example.com/signup,Click,https://example.com/pricing
+S003,U789,2025-05-28 10:05:50,https://example.com/blog,Page View,
+S003,U789,2025-05-28 10:06:30,https://example.com/blog/post1,Click,https://example.com/blog
+S004,U321,2025-05-28 10:10:10,https://example.com/,Page View,
+S004,U321,2025-05-28 10:10:35,https://example.com/login,Click,https://example.com/
