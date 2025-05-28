@@ -27,13 +27,14 @@ const AnalysisResultSchema = z.object({
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>
 
 const UX_ANALYSIS_PROMPT = `
-Act as a UX data analyst and a UI expert. Here's is a website link.
-Identify broken flows and user frustration. Then, summarize your findings and suggest
-3 UX changes that could improve user experience for this specific case.
-Suggest how much this flow will improve after adding your improvements.
-Create a priority list of improvements what goes first what next, mark as critical, medium, low.
-create an A/B test plan.
-`
+You are a UX Data Analyst and UI Expert. User will provide you a website link.
+1. Visit the homepage and identify key user flows (e.g., sign-up, product exploration).
+2. Identify any broken flows, pain points, or friction areas based on standard UX heuristics.
+3. Summarize your UX findings.
+4. Suggest 3 specific UX improvements based on your findings.
+5. Estimate how much each improvement could increase user satisfaction (as a %).
+6. Create a prioritized list of these improvements. Mark each as Critical, Medium, or Low.
+7. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.`
 
 export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult> {
   try {
