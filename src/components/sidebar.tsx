@@ -128,7 +128,7 @@ export function Sidebar() {
               <span className="text-lg">🍀</span> Find this interesting?
             </h3>
             <p className="text-sm text-muted-foreground">
-              We are still looking for people who want to join me in building this awesome product.
+              We are still looking for people who want to join us in building this awesome product.
             </p>
             <p className="text-sm text-muted-foreground mb-4">
               If you&apos;re interested, email me at{" "}
