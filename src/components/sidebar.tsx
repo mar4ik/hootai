@@ -130,18 +130,14 @@ export function Sidebar() {
             <p className="text-sm text-muted-foreground">
               I&apos;m still looking for people who want to join me in building this awesome product.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               If you&apos;re interested, email me at{" "}
               <a href="mailto:mariam.morozova@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">
                 mariam.morozova@gmail.com
               </a>
             </p>
-
-            <a 
-              href="#" 
-              className="block w-full text-center p-2.5 mt-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-colors cursor-pointer"
-            >
-              Donate <span className="ml-1">♥</span>
+            <a href='https://ko-fi.com/U6U31FN5A7' target='_blank'>
+              <img height='46' style={{border:0, marginTop: '1em'}} src='https://storage.ko-fi.com/cdn/kofi2.png?v=6' alt='Buy Me a Coffee at ko-fi.com' />
             </a>
           </div>
         </div>

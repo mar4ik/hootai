@@ -159,7 +159,7 @@ export default function WhatIsNextContent() {
           <Button 
             type="submit" 
             variant="outline"
-            className="w-full text-indigo-600 border-indigo-500 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-600"
+            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
             disabled={isSubmitting || !isFormValid}
           >
             {isSubmitting ? 'Sending...' : 'Send your message'}
