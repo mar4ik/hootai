@@ -60,17 +60,21 @@ export default function AboutContent() {
         
         <div className="space-y-4 sm:space-y-6 mb-8 sm:mb-10">
           <h2 className="text-[14px] text-gray-800 font-normal">
-            It all started with a mission to help anyone building amazing products quickly 
-            find user gaps and improve UX.
+          👋 Hey I&apos;m building Hoot.ai a tool that helps UX and product folks spot the actual problems in their software (not just vague charts and heatmaps). It uses AI to find patterns in user data and tells you where things are going wrong  so you can fix it before your users rage-quit.
+
+If you donate It helps me keep building, testing, and occasionally sleeping.
+            {/* It all started with a mission to help anyone building amazing products quickly 
+            find user gaps and improve UX. */}
           </h2>
           
           <p className="text-[14px] text-gray-800">
-            Hoot.ai connects to your tools and uses AI to spot issues and suggest fixes, 
-            so you spend less time guessing and more time improving.
+            Hoot.ai uses AI to spot issues and suggest fixes, so you spend less time guessing and more time improving.
+            We start with simple CSV and PDF files, but we&apos;re planning to connect to more tools in the future.
           </p>
           
           <p className="text-[14px] flex items-center text-gray-800">
-            We&apos;re still shaping Hoot.ai, so your feedback and ideas really matter <span className="text-red-500 ml-1">❤️</span>
+            We&apos;re still shaping Hoot.ai, so your feedback and ideas really matter.
+            If you donate It helps me keep building, testing, and occasionally sleeping. Thanks for the support ❤️
           </p>
         </div>
         
@@ -119,15 +123,24 @@ export default function AboutContent() {
           </div>
           
           <input type="hidden" name="recipient" value="mariam.morozova@gmail.com" />
-          
+          <div style={{maxWidth: '50%', margin: '3em auto'}}>
           <Button 
             type="submit" 
-            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
+            variant="outline"
+            className="w-full text-indigo-600 border-indigo-500 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-600"
             disabled={isSubmitting || !isFormValid}
           >
             {isSubmitting ? 'Sending...' : 'Send your feedback'}
           </Button>
+          </div>
         </form>
+        <div style={{maxWidth: '50%', margin: '3em auto'}}>
+        <a 
+              href="#" 
+              className="block text-center p-2.5 mt-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-colors cursor-pointer"
+            >
+              Donate <span className="ml-1">♥</span>
+            </a></div>
       </div>
     </div>
   )

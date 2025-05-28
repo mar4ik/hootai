@@ -139,7 +139,7 @@ export function Sidebar() {
 
             <a 
               href="#" 
-              className="block w-full text-center p-2.5 mt-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-colors"
+              className="block w-full text-center p-2.5 mt-3 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition-colors cursor-pointer"
             >
               Donate <span className="ml-1">♥</span>
             </a>
