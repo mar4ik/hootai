@@ -140,11 +140,10 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
           <div className="space-y-4">
             <p className="text-[14px] text-gray-800">Start optimizing your product experience in minutes.</p>
             <p className="text-[14px] text-gray-800">
-              <strong>Upload your CSV or PDF product data</strong>, or just enter your <strong>website URL</strong>.
+              Upload a CSV or PDF file with user journey data like page views, click paths, or session logs or simply enter your website URL.
             </p>
-
             <p className="text-[14px] text-gray-600">
-              Hoot.ai will analyze user behavior, detect friction points, and give you actionable UX insights powered by
+              Hoot.ai will analyze user behavior, detect friction points and give you actionable UX insights powered by
               AI.
             </p>
 

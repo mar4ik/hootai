@@ -3,6 +3,7 @@
 import { ArrowLeft, Search, Target, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAnalysisStore } from "@/lib/store"
+import React from "react"
 
 interface AnalysisResultsProps {
   onStartOver: () => void
@@ -60,7 +61,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           <div className="flex gap-4 justify-center">
             <Button 
               onClick={() => startAnalysis()} 
-              className="p-2.5 sm:p-3 text-base rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50"
+              className="p-2.5 sm:p-3 text-base rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-500 hover:bg-indigo-600 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50"
             >
               Try Again
             </Button>
@@ -93,13 +94,13 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           <span className="text-2xl">😊</span>
           <h1 className="text-3xl font-bold">Analysis</h1>
         </div>
-        <Button 
+        <button 
           onClick={onStartOver} 
-          className="flex items-center gap-1 p-2 rounded-lg shadow-sm hover:bg-gray-100 transition-all"
+          className="text-blue-600 hover:text-blue-800 hover:cursor-pointer flex items-center gap-1 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Start over
-        </Button>
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -150,6 +151,21 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
                     <span className="font-semibold">Suggestion:</span> {issue.suggestion}
                   </li>
                 )}
+                {issue.aptestplan && (
+                  <li className="list-disc list-outside">
+                    <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
+                  </li>
+                )}
+                <li className="list-disc list-outside">
+                  <span className="font-semibold">Priority:</span>{' '}
+                  {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
+                  {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
+                  {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
+                  {issue.priorityList}
+                </li>
+                <li className="list-disc list-outside">
+                  <span className="font-semibold">Estimation:</span> {issue.estimation}
+                </li>
               </ul>
             </div>
           ))}

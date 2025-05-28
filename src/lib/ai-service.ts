@@ -18,7 +18,10 @@ const AnalysisResultSchema = z.object({
       title: z.string(),
       observation: z.string(),
       impact: z.string(),
-      suggestion: z.string().optional()
+      suggestion: z.string(),
+      estimation: z.string(),
+      aptestplan: z.string(),
+      priorityList:z.string(),
     })
   )
 })
@@ -34,7 +37,9 @@ You are a UX Data Analyst and UI Expert. User will provide you a website link.
 4. Suggest 3 specific UX improvements based on your findings.
 5. Estimate how much each improvement could increase user satisfaction (as a %).
 6. Create a prioritized list of these improvements. Mark each as Critical, Medium, or Low.
-7. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.`
+7. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.
+Only start after you have successfully reviewed the site structure.`
+
 
 export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult> {
   try {
@@ -89,3 +94,4 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
     }
   }
 } 
+console.log(`Sending feedback to mariam.morozova@gmail.com: ...`)
