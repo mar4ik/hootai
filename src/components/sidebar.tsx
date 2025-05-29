@@ -120,11 +120,19 @@ export function Sidebar() {
             <span className="text-xl">❤️</span>
             <span>Wall of fame</span>
           </Link>
+          <Link
+            href="/team"
+            className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
+            onClick={() => isMobile && setIsOpen(false)}
+          >
+            <span className="text-xl">👥</span>
+            <span>Our Team</span>
+          </Link>
         </nav>
         
         <div className="p-4 border-t space-y-4">        
           <div className="p-4 bg-muted/30 rounded-lg space-y-2">
-            <h3 className="font-medium flex items-center gap-1">
+            {/* <h3 className="font-small flex items-center gap-1">
               <span className="text-lg">🍀</span> Find this interesting?
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -134,8 +142,10 @@ export function Sidebar() {
               If you&apos;re interested, email me at{" "}
               <a href="mailto:mariam.morozova@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">
                 mariam.morozova@gmail.com
+              </a> or <a href="mailto:eunzie@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">
+                eunzie@gmail.com
               </a>
-            </p>
+            </p> */}
             <a href="https://ko-fi.com/U6U31FN5A7" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
               <button style={{
                 backgroundColor: '#FFDA6E',

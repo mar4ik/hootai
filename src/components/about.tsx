@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 import { Button } from "./ui/button"
+import emailjs from '@emailjs/browser'
+
+// Initialize EmailJS (public key is safe to expose in client-side code)
+emailjs.init("bjZsfxXhjNiBXiLf7")
 
 export default function AboutContent() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,6 +16,7 @@ export default function AboutContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
 
   // Check if any field is filled to enable the submit button
@@ -22,22 +28,25 @@ export default function AboutContent() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
+    setSubmitError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formRef.current) return;
+    
     setIsSubmitting(true);
-
+    setSubmitError(null);
+    
     try {
-      // In a real app, this would send an email to mariam.morozova@gmail.com
-      // Simulating email submission
-      console.log(`Sending feedback to mariam.morozova@gmail.com:
-        From: ${formData.name} (${formData.email})
-        Message: ${formData.message}
-      `);
+      // Send email using EmailJS with form element directly
+      const result = await emailjs.sendForm(
+        'service_kyq6yqw', // Service ID
+        'template_gcnhhe7', // Template ID
+        formRef.current
+      );
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Email sent successfully!', result);
       
       setSubmitSuccess(true);
       setFormData({ name: '', email: '', message: '' });
@@ -45,7 +54,23 @@ export default function AboutContent() {
       // Reset success message after 3 seconds
       setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error('Error sending email:', error);
+      
+      // More detailed error reporting
+      if (error instanceof Error) {
+        setSubmitError(`Error (${error.name}): ${error.message}`);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any;
+        setSubmitError(`Error (${errorObj.status || 'unknown'}): ${errorObj.text || 'Unknown error'}`);
+        console.error('Error object:', errorObj);
+      } else {
+        setSubmitError(`Unknown error: ${String(error)}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -78,10 +103,16 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
           </p>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {submitSuccess && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 shadow-sm text-sm sm:text-base">
               Thank you for your feedback! We&apos;ll get back to you soon.
+            </div>
+          )}
+          
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 shadow-sm text-sm sm:text-base">
+              {submitError}
             </div>
           )}
           
@@ -89,6 +120,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             <label htmlFor="name" className="block text-base sm:text-lg font-medium mb-1.5 sm:mb-2 text-gray-700">Name</label>
             <Input 
               id="name" 
+              name="name"
               placeholder="Enter your name here" 
               className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               value={formData.name}
@@ -101,6 +133,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             <label htmlFor="email" className="block text-base sm:text-lg font-medium mb-1.5 sm:mb-2 text-gray-700">Email</label>
             <Input 
               id="email" 
+              name="email"
               type="email" 
               placeholder="Enter your email here" 
               className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
@@ -114,6 +147,7 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             <label htmlFor="message" className="block text-base sm:text-lg font-medium mb-1.5 sm:mb-2 text-gray-700">Message</label>
             <Textarea 
               id="message" 
+              name="message"
               placeholder="Enter your message here" 
               className="w-full p-2 sm:p-3 text-sm sm:text-base min-h-24 sm:min-h-32 border border-gray-300 rounded-lg hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
               value={formData.message}
@@ -122,12 +156,16 @@ If you donate It helps me keep building, testing, and occasionally sleeping.
             />
           </div>
           
-          <input type="hidden" name="recipient" value="mariam.morozova@gmail.com" />
+          {/* Hidden fields for recipient information */}
+          <input type="hidden" name="name" value="Mariam" />
+          <input type="hidden" name="to_email" value="mariam.morozova@gmail.com" />
+          <input type="hidden" name="reply_to" value={formData.email} />
+          
           <div style={{maxWidth: '50%', margin: '3em auto'}}>
           <Button 
             type="submit" 
             variant="outline"
-            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2"
+            className="w-full p-2.5 sm:p-3 text-base sm:text-lg rounded-lg shadow-md transition-all hover:shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-4 focus:ring-indigo-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 disabled:hover:shadow-md mt-2 cursor-pointer"
             disabled={isSubmitting || !isFormValid}
           >
             {isSubmitting ? 'Sending...' : 'Send your feedback'}
