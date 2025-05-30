@@ -19,10 +19,10 @@ export default function SignUp() {
     setMessage(null)
 
     try {
-      const { error } = await signIn(email)
+      const response = await signIn(email)
       
-      if (error) {
-        setMessage({ type: "error", text: error.message })
+      if (response.error) {
+        setMessage({ type: "error", text: response.error.message })
       } else {
         setMessage({ 
           type: "success", 
