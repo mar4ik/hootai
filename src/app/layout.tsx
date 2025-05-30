@@ -4,6 +4,7 @@ import { Inter, Istok_Web } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
+import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
 const istokWeb = Istok_Web({ 
@@ -43,6 +44,19 @@ export default function RootLayout({
             `
           }}
         />
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-1NXXGW8Z77"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-1NXXGW8Z77');
+          `}
+        </Script>
       </head>
       <body className={`${inter.className} ${istokWeb.variable}`}>
         <ThemeProvider>
