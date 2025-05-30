@@ -52,7 +52,7 @@ export default function SignUp() {
         {user ? (
           <div className="space-y-6">
             <div className="p-4 bg-green-50 rounded-md border border-green-100 text-center">
-              <p className="text-green-800 font-medium">You're signed in as {user.email}</p>
+              <p className="text-green-800 font-medium">You&apos;re signed in as {user.email}</p>
             </div>
             
             <div className="flex justify-center">

@@ -15,7 +15,7 @@ export default function TeamContent() {
     {
       name: "EunJee Hong",
       role: "Co-Founder",
-      bio: "With a background in business and design, I've worked as an architect, product designer, and product manager—launching products from scratch in startup environments. I'm passionate about building intuitive web platforms, mobile apps, and 3D experiences that drive growth and elevate user experience.",
+      bio: "With a background in business and design, I&apos;ve worked as an architect, product designer, and product manager—launching products from scratch in startup environments. I&apos;m passionate about building intuitive web platforms, mobile apps, and 3D experiences that drive growth and elevate user experience.",
       image: "/images/eunJee.jpeg",
       email: "eunzie@gmail.com",
       linkedin: "https://www.linkedin.com/in/eunjee/",
@@ -24,7 +24,7 @@ export default function TeamContent() {
     // {
     //   name: "Super Hero",
     //   role: "we need engineers",
-    //   bio: "Experienced UX researcher with a background in cognitive psychology. Helps shape Hoot.ai's analysis methodology and insights.",
+    //   bio: "Experienced UX researcher with a background in cognitive psychology. Helps shape Hoot.ai&apos;s analysis methodology and insights.",
     //   image: "/team/sarah.jpg",
     //   // email: "sarah@hoot.ai",
     //   // linkedin: "https://linkedin.com/in/sarahjohnson"
@@ -39,7 +39,7 @@ export default function TeamContent() {
       
       <div className="space-y-4 sm:space-y-6 mb-8">
         <p className="text-[14px] text-gray-800">
-          Meet the talented individuals behind Hoot.ai. We're a passionate team dedicated to improving user experiences through AI-powered insights.
+          Meet the talented individuals behind Hoot.ai. We&apos;re a passionate team dedicated to improving user experiences through AI-powered insights.
         </p>
       </div>
       
@@ -92,7 +92,7 @@ export default function TeamContent() {
         <h2 className="text-lg font-semibold mb-4">🍀 Find this interesting?</h2>
         <p className="text-[14px] text-gray-800 mb-4">
           We are still looking for people who want to join us in building this awesome product.
-          If you're interested in joining our team, contact us at <a href="mailto:mariam.morozova@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">mariam.morozova@gmail.com</a> or <a href="mailto:eunzie@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">eunzie@gmail.com</a>.
+          If you&apos;re interested in joining our team, contact us at <a href="mailto:mariam.morozova@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">mariam.morozova@gmail.com</a> or <a href="mailto:eunzie@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">eunzie@gmail.com</a>.
         </p>
       </div>
       <div className="border-t border-gray-200 pt-6 text-center">

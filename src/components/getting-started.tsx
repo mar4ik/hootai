@@ -193,7 +193,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 </Button>
               </div>
             </div>
-            <div className="text-[14px] text-gray-800" style={{marginBottom: '0px'}}>Don't have a file? Test with dummy data! <br />  Just download one of the files below and upload it to Hoot.ai.</div>
+            <div className="text-[14px] text-gray-800" style={{marginBottom: '0px'}}>Don&apos;t have a file? Test with dummy data! <br />  Just download one of the files below and upload it to Hoot.ai.</div>
             <div className="text-[14px] text-gray-800">
               <a href="/downloads/dummy_user_journey_data.csv" download className="text-indigo-600 hover:text-indigo-800 cursor-pointer mb-2" style={{display: 'block'}}>
                 📄 Download CSV

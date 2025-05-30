@@ -12,7 +12,7 @@ export function PageLayout({ children }: PageLayoutProps) {
   const [isMobile, setIsMobile] = useState(false)
   
   useEffect(() => {
-    // Check if we're on the client side
+    // Check if we&apos;re on the client side
     if (typeof window !== 'undefined') {
       const checkScreenSize = () => {
         setIsMobile(window.innerWidth < 768)
