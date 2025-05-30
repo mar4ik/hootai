@@ -11,12 +11,34 @@ export default function SignUp() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const { signIn, user } = useAuth()
+
+  const validateEmail = (email: string): boolean => {
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    
+    // Reset error states
+    setValidationError(null)
     setMessage(null)
+    
+    // Validate email
+    if (!email.trim()) {
+      setValidationError("Email is required")
+      return
+    }
+    
+    if (!validateEmail(email)) {
+      setValidationError("Please enter a valid email address")
+      return
+    }
+    
+    setIsLoading(true)
 
     try {
       const response = await signIn(email)
@@ -29,7 +51,7 @@ export default function SignUp() {
           text: "Check your email for a confirmation link!" 
         })
       }
-    } catch (error) {
+    } catch (_: any) {
       setMessage({ 
         type: "error", 
         text: "An unexpected error occurred. Please try again." 
@@ -77,9 +99,16 @@ export default function SignUp() {
                 required
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  // Clear validation error when user types
+                  if (validationError) setValidationError(null)
+                }}
+                className={`w-full ${validationError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               />
+              {validationError && (
+                <p className="text-sm text-red-500 mt-1">{validationError}</p>
+              )}
             </div>
 
             {message && (
