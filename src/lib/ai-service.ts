@@ -32,14 +32,22 @@ export type AnalysisResult = z.infer<typeof AnalysisResultSchema>
 
 const UX_ANALYSIS_PROMPT = `
 You are a UX Data Analyst and UI Expert. User will provide you a website link.
-1. Visit the homepage and identify key user flows (e.g., sign-up, product exploration).
-2. Identify any broken flows, pain points, or friction areas based on standard UX heuristics.
+1. Identify any broken flows, pain points, or friction areas based on standard UX heuristics.
 3. Summarize your UX findings.
 4. Suggest 3 specific UX improvements based on your findings.
 5. Estimate how much each improvement could increase user satisfaction (as a %).
 6. Create a prioritized list of these improvements. Mark each as Critical, Medium, or Low.
 7. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.
-Only start after you have successfully reviewed the site structure.`
+Important: Do not analyze raw HTML or hidden elements. Focus only on visible, user-facing content. Begin only after the page is fully loaded.`
+
+// 1. Identify top 3 user flows from the homepage or content.
+// 2. Identify any broken flows, pain points, or friction areas based on standard UX heuristics.
+// 3. Summarize your UX findings.
+// 4. Suggest 3 specific UX improvements based on your findings.
+// 5. Estimate how much each improvement could increase user satisfaction (as a %).
+// 6. Create a prioritized list of these improvements. Mark each as Critical, Medium, or Low.
+// 7. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.
+// Important: Do not analyze raw HTML or hidden elements. Focus only on visible, user-facing content. Begin only after the page is fully loaded.
 
 
 export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult> {
