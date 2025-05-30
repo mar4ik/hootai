@@ -27,6 +27,7 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   signIn: (email: string) => Promise<{ error: Error | null }>
+  signInWithGoogle: () => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
 }
 
@@ -119,6 +120,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInWithGoogle = async () => {
+    // In development mode without Supabase, simulate successful login
+    if (DEV_MODE) {
+      // Set a development user
+      setUser({
+        id: "dev-user-id",
+        email: "google-user@example.com",
+      })
+      return { error: null }
+    }
+    
+    // Regular Supabase sign-in with Google
+    if (supabase) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      return { error }
+    }
+    
+    // If Supabase is not configured, return a configuration error
+    return { 
+      error: new Error("Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment variables.") 
+    }
+  }
+
   const signOut = async () => {
     if (DEV_MODE) {
       // Just clear the user state in development mode
@@ -133,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
