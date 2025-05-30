@@ -9,7 +9,8 @@ const AnalysisResultSchema = z.object({
   problems: z.array(
     z.object({
       title: z.string(),
-      description: z.string()
+      description: z.string(),
+      error: z.array(z.string()).optional(),
     })
   ),
   issues: z.array(
@@ -88,7 +89,8 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       summary: 'Analysis failed. Please try again.',
       problems: [{ 
         title: 'Analysis Error', 
-        description: 'We encountered an error while analyzing your content.' 
+        description: 'We encountered an error while analyzing your content.',
+        error: ['error'],
       }],
       issues: []
     }
