@@ -4,10 +4,13 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
+import { AnimatedLink } from "./animated-link"
+import { usePathname } from "next/navigation"
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const pathname = usePathname()
   
   // Handle window resize
   useEffect(() => {
@@ -53,6 +56,23 @@ export function Sidebar() {
     }
   }, [isOpen, isMobile])
 
+  // Helper function to determine if a link is active
+  const isLinkActive = (href: string) => {
+    if (href === '/') {
+      return pathname === '/'
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  // Helper function to get the appropriate class names for a link
+  const getLinkClassName = (href: string) => {
+    const baseClasses = "flex items-center gap-2 p-3 rounded-md transition-colors"
+    const activeClasses = "bg-muted/50 text-primary font-medium"
+    const inactiveClasses = "hover:bg-muted/50"
+    
+    return `${baseClasses} ${isLinkActive(href) ? activeClasses : inactiveClasses}`
+  }
+
   return (
     <>
       {/* Mobile toggle button */}
@@ -79,7 +99,7 @@ export function Sidebar() {
       >
         <div className="p-4 border-b">
           <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
+            <AnimatedLink href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
               <Image 
                 src="/owl-favicon.svg" 
                 alt="Hoot.ai Logo" 
@@ -88,51 +108,51 @@ export function Sidebar() {
                 className="h-8 w-8" 
               />
               <span>Hoot.ai</span>
-            </Link>
+            </AnimatedLink>
           </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <Link
+          <AnimatedLink
             href="/"
-            className="flex items-center gap-2 p-3 rounded-md bg-muted/50 text-primary hover:bg-muted transition-colors"
+            className={getLinkClassName("/")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🚀</span>
             <span>Getting started</span>
-          </Link>
-          <Link
-            href="/what_is_next"
-            className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
+          </AnimatedLink>
+          <AnimatedLink
+            href="/what-is-next"
+            className={getLinkClassName("/what-is-next")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🍀</span>
             <span>What is coming next?</span>
-          </Link>
-          <Link 
+          </AnimatedLink>
+          <AnimatedLink 
             href="/about" 
-            className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
+            className={getLinkClassName("/about")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🤔</span>
             <span>About Hoot.ai</span>
-          </Link>
-          <Link
+          </AnimatedLink>
+          <AnimatedLink
             href="/wall_of_fame"
-            className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
+            className={getLinkClassName("/wall_of_fame")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">❤️</span>
             <span>Wall of fame</span>
-          </Link>
-          <Link
+          </AnimatedLink>
+          <AnimatedLink
             href="/team"
-            className="flex items-center gap-2 p-3 rounded-md hover:bg-muted/50 transition-colors"
+            className={getLinkClassName("/team")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">👥</span>
             <span>Our Team</span>
-          </Link>
+          </AnimatedLink>
         </nav>
         
         <div className="p-4 border-t space-y-4">        
