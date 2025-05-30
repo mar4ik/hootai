@@ -1,14 +1,13 @@
 "use client"
 
 import React from 'react'
-import { Sidebar } from "@/components/sidebar"
 import TeamContent from "@/components/team"
+import { PageLayout } from "@/components/page-layout"
 
 export default function TeamPage() {
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <PageLayout>
       <TeamContent />
-    </div>
+    </PageLayout>
   )
 } 

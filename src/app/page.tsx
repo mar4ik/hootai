@@ -1,11 +1,12 @@
-import { Sidebar } from "@/components/sidebar"
+"use client"
+
 import { MainContent } from "@/components/main-content"
+import { PageLayout } from "@/components/page-layout"
 
 export default function Home() {
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <PageLayout>
       <MainContent />
-    </div>
+    </PageLayout>
   )
 }

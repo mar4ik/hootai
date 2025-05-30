@@ -1,14 +1,13 @@
 "use client"
 
 import React from 'react'
-import { Sidebar } from "@/components/sidebar"
 import WallOfFameContent from "@/components/wall-of-fame"
+import { PageLayout } from "@/components/page-layout"
 
 export default function WallOfFamePage() {
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <PageLayout>
       <WallOfFameContent />
-    </div>
+    </PageLayout>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Menu, X } from "lucide-react"
 
 export function Sidebar() {
@@ -56,7 +57,7 @@ export function Sidebar() {
     <>
       {/* Mobile toggle button */}
       <button 
-        className="sidebar-toggle md:hidden fixed top-4 right-4 z-50 p-2 rounded-md bg-background shadow-md border"
+        className="sidebar-toggle md:hidden fixed top-4 right-4 z-[60] p-2 rounded-md bg-background shadow-md border"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle menu"
       >
@@ -65,26 +66,30 @@ export function Sidebar() {
       
       {/* Mobile overlay */}
       {isMobile && isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-[45]" onClick={() => setIsOpen(false)} />
       )}
       
       {/* Sidebar content */}
       <div 
-        className={`sidebar-content fixed md:static inset-y-0 left-0 z-40 w-64 border-r bg-background flex flex-col transition-transform duration-300 md:transform-none ${
+        className={`sidebar-content h-full w-64 border-r bg-background flex flex-col md:sticky md:top-0 ${
+          isMobile ? 'fixed inset-y-0 left-0 z-[50] transition-transform duration-300' : ''
+        } ${
           isOpen || !isMobile ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 border-b flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
-            <span className="text-2xl">🦉</span> Hoot.ai
-          </Link>
-          {/* <button 
-            className="md:hidden p-1"
-            onClick={() => setIsOpen(false)}
-            aria-label="Close menu"
-          >
-            <X size={20} />
-          </button> */}
+        <div className="p-4 border-b">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
+              <Image 
+                src="/owl-favicon.svg" 
+                alt="Hoot.ai Logo" 
+                width={32} 
+                height={32} 
+                className="h-8 w-8" 
+              />
+              <span>Hoot.ai</span>
+            </Link>
+          </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -132,20 +137,6 @@ export function Sidebar() {
         
         <div className="p-4 border-t space-y-4">        
           <div className="p-4 bg-muted/30 rounded-lg space-y-2">
-            {/* <h3 className="font-small flex items-center gap-1">
-              <span className="text-lg">🍀</span> Find this interesting?
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              We are still looking for people who want to join us in building this awesome product.
-            </p>
-            <p className="text-sm text-muted-foreground mb-4">
-              If you&apos;re interested, email me at{" "}
-              <a href="mailto:mariam.morozova@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">
-                mariam.morozova@gmail.com
-              </a> or <a href="mailto:eunzie@gmail.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">
-                eunzie@gmail.com
-              </a>
-            </p> */}
             <a href="https://ko-fi.com/U6U31FN5A7" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
               <button style={{
                 backgroundColor: '#FFDA6E',
@@ -159,9 +150,8 @@ export function Sidebar() {
                 cursor: 'pointer'
               }}>
                 ❤️ Help us build Hoot.ai
-            </button>
+              </button>
             </a>
-
           </div>
         </div>
       </div>
