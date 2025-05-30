@@ -62,8 +62,8 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
           throw new Error(`Failed to fetch URL: ${response.statusText}`)
         }
         
-        const html = await response.text()
-        analysisPrompt += `\n\nAnalyze this website HTML content:\n${html}`
+        //const html = await response.text()
+        // analysisPrompt += `\n\nAnalyze this website HTML content:\n${html}`
       } catch {
         // If fetch fails, we'll just use the URL itself
         analysisPrompt += `\n\nAnalyze this website URL: ${data.content}`
