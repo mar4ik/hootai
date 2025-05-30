@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { AnimatedLink } from "./animated-link"
