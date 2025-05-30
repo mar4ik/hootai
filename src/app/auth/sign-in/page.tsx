@@ -51,7 +51,7 @@ export default function SignIn() {
           text: "Check your email for a login link!" 
         })
       }
-    } catch (_: any) {
+    } catch {
       setMessage({ 
         type: "error", 
         text: "An unexpected error occurred. Please try again." 

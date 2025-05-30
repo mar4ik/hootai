@@ -51,7 +51,7 @@ export default function SignUp() {
           text: "Check your email for a confirmation link!" 
         })
       }
-    } catch (_: any) {
+    } catch {
       setMessage({ 
         type: "error", 
         text: "An unexpected error occurred. Please try again." 
