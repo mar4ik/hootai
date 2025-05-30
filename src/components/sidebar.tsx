@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
-import { AnimatedLink } from "./animated-link"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 export function Sidebar() {
@@ -98,7 +98,7 @@ export function Sidebar() {
       >
         <div className="p-4 border-b">
           <div className="flex justify-between items-center">
-            <AnimatedLink href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => isMobile && setIsOpen(false)}>
               <Image 
                 src="/owl-favicon.svg" 
                 alt="Hoot.ai Logo" 
@@ -107,51 +107,51 @@ export function Sidebar() {
                 className="h-8 w-8" 
               />
               <span>Hoot.ai</span>
-            </AnimatedLink>
+            </Link>
           </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <AnimatedLink
+          <Link
             href="/"
             className={getLinkClassName("/")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🚀</span>
             <span>Getting started</span>
-          </AnimatedLink>
-          <AnimatedLink
+          </Link>
+          <Link
             href="/what-is-next"
             className={getLinkClassName("/what-is-next")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🍀</span>
             <span>What is coming next?</span>
-          </AnimatedLink>
-          <AnimatedLink 
+          </Link>
+          <Link 
             href="/about" 
             className={getLinkClassName("/about")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">🤔</span>
             <span>About Hoot.ai</span>
-          </AnimatedLink>
-          <AnimatedLink
+          </Link>
+          <Link
             href="/wall_of_fame"
             className={getLinkClassName("/wall_of_fame")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">❤️</span>
             <span>Wall of fame</span>
-          </AnimatedLink>
-          <AnimatedLink
+          </Link>
+          <Link
             href="/team"
             className={getLinkClassName("/team")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">👥</span>
             <span>Our Team</span>
-          </AnimatedLink>
+          </Link>
         </nav>
         
         <div className="p-4 border-t space-y-4">        

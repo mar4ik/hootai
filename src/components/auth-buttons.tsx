@@ -3,10 +3,9 @@
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, useRef } from "react"
-import Link from "next/link"
 import { UserAvatar } from "@/components/user-avatar"
 import { LogOut, User, ChevronDown } from "lucide-react"
-import { AnimatedLink } from "./animated-link"
+import Link from "next/link"
 
 export function AuthButtons() {
   const { user, signOut, loading } = useAuth()
@@ -70,10 +69,10 @@ export function AuthButtons() {
                 <div className="px-4 py-2 text-sm text-gray-500 border-b truncate">
                   {user.email}
                 </div>
-                <AnimatedLink href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
                   <User size={16} />
                   <span>Profile</span>
-                </AnimatedLink>
+                </Link>
                 <button 
                   onClick={() => {
                     signOut()
@@ -108,10 +107,10 @@ export function AuthButtons() {
         {isDropdownOpen && (
           <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg border z-[100] origin-top-right animate-in zoom-in-95 duration-100">
             <div className="py-1">
-              <AnimatedLink href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+              <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
                 <User size={16} />
                 <span>Profile</span>
-              </AnimatedLink>
+              </Link>
               <button 
                 onClick={() => {
                   signOut()
@@ -132,7 +131,7 @@ export function AuthButtons() {
   if (isMobile) {
     return (
       <div className="grid grid-cols-2 gap-2 p-2">
-        <AnimatedLink href="/auth/sign-in" className="w-full">
+        <Link href="/auth/sign-in" className="w-full">
           <Button 
             variant="ghost" 
             size="sm"
@@ -140,8 +139,8 @@ export function AuthButtons() {
           >
             Sign In
           </Button>
-        </AnimatedLink>
-        <AnimatedLink href="/auth/sign-up" className="w-full">
+        </Link>
+        <Link href="/auth/sign-up" className="w-full">
           <Button 
             variant="default" 
             size="sm"
@@ -149,23 +148,23 @@ export function AuthButtons() {
           >
             Sign Up
           </Button>
-        </AnimatedLink>
+        </Link>
       </div>
     )
   }
 
   return (
     <div className="flex items-center gap-2 p-1">
-      <AnimatedLink href="/auth/sign-in">
+      <Link href="/auth/sign-in">
         <Button variant="ghost" size="sm">
           Sign In
         </Button>
-      </AnimatedLink>
-      <AnimatedLink href="/auth/sign-up">
+      </Link>
+      <Link href="/auth/sign-up">
         <Button variant="default" size="sm">
           Sign Up
         </Button>
-      </AnimatedLink>
+      </Link>
     </div>
   )
 } 

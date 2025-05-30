@@ -4,8 +4,6 @@ import { Inter, Istok_Web } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
-import { PageTransition } from "@/components/page-transition"
-import { NavigationProgress } from "@/components/navigation-progress"
 
 const inter = Inter({ subsets: ["latin"] })
 const istokWeb = Istok_Web({ 
@@ -49,10 +47,7 @@ export default function RootLayout({
       <body className={`${inter.className} ${istokWeb.variable}`}>
         <ThemeProvider>
           <AuthProvider>
-            <NavigationProgress />
-            <PageTransition>
-              {children}
-            </PageTransition>
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>
