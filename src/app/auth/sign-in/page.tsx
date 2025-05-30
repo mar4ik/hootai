@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
-import Image from "next/image"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
