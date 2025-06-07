@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Admin and debug pages
+/src/app/admin
+/src/app/debug
+/src/app/test-db
+/src/lib/database-functions.sql
+
+# Admin backup directory
+/admin-backup

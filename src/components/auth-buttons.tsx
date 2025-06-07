@@ -4,13 +4,17 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, useRef } from "react"
 import { UserAvatar } from "@/components/user-avatar"
-import { LogOut, User, ChevronDown } from "lucide-react"
+import { LogOut, User, ChevronDown, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
+// Check if we're in development mode
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export function AuthButtons() {
-  const { user, signOut, loading } = useAuth()
+  const { user, signOut, loading, forceCreateProfile } = useAuth()
   const [isMobile, setIsMobile] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isFixing, setIsFixing] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   
   // Handle window resize
@@ -46,8 +50,33 @@ export function AuthButtons() {
     }
   }, [])
 
+  // Handle profile fix
+  const handleFixProfile = async () => {
+    if (!user) return
+    
+    setIsFixing(true)
+    
+    try {
+      // Force create profile
+      await forceCreateProfile()
+      
+      // Wait a moment and then close the dropdown
+      setTimeout(() => {
+        setIsFixing(false)
+      }, 1000)
+    } catch (err) {
+      console.error('Error fixing profile:', err)
+      setIsFixing(false)
+    }
+  }
+
+  // Don't return null on loading - show a loading indicator instead
   if (loading) {
-    return null
+    return (
+      <div className="p-2 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+      </div>
+    )
   }
 
   if (user) {
@@ -73,6 +102,17 @@ export function AuthButtons() {
                   <User size={16} />
                   <span>Profile</span>
                 </Link>
+                {/* Fix Profile button - only visible in development */}
+                {isDevelopment && (
+                  <button
+                    onClick={handleFixProfile}
+                    disabled={isFixing}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-left"
+                  >
+                    <RefreshCw size={16} className={isFixing ? "animate-spin" : ""} />
+                    <span>{isFixing ? "Fixing..." : "Fix Profile"}</span>
+                  </button>
+                )}
                 <button 
                   onClick={() => {
                     signOut()
@@ -111,6 +151,17 @@ export function AuthButtons() {
                 <User size={16} />
                 <span>Profile</span>
               </Link>
+              {/* Fix Profile button - only visible in development */}
+              {isDevelopment && (
+                <button
+                  onClick={handleFixProfile}
+                  disabled={isFixing}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-left"
+                >
+                  <RefreshCw size={16} className={isFixing ? "animate-spin" : ""} />
+                  <span>{isFixing ? "Fixing..." : "Fix Profile"}</span>
+                </button>
+              )}
               <button 
                 onClick={() => {
                   signOut()

@@ -9,9 +9,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Supabase Configuration - required for authentication
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here (https://eaennrqqtlmanbivdhqm.supabase.co)
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here process.env.SUPABASE_KEY
-https://vercel.com/mariam-morozovas-projects/hootai/settings/environments/production
+NEXT_PUBLIC_SUPABASE_URL=https://eaennrqqtlmanbivdhqm.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=https://vercel.com/mariam-morozovas-projects/hootai/settings/environments/production
 ```
 
 2. Install dependencies:
@@ -24,7 +23,31 @@ yarn
 pnpm install
 ```
 
-3. Run the development server:
+3. Set up the Supabase database:
+
+First, create a Supabase project at [supabase.com](https://supabase.com) if you haven't already.
+
+Then, you can set up the required database tables using one of these methods:
+
+**Option A: Using the setup script (Recommended)**
+
+Make the setup script executable and run it:
+
+```bash
+chmod +x scripts/setup-db.js
+node scripts/setup-db.js
+```
+
+Follow the prompts to enter your Supabase URL and service role key.
+
+**Option B: Manual setup**
+
+1. Go to your Supabase dashboard
+2. Navigate to the SQL Editor
+3. Copy the contents of `src/lib/database-schema.sql`
+4. Run the SQL in the Supabase SQL Editor
+
+4. Run the development server:
 
 ```bash
 npm run dev
@@ -48,6 +71,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - Analyze website URLs
 - Get AI-powered UX insights
 - Authentication with Supabase
+- User profiles with customizable display name and bio
 
 ## Learn More
 
