@@ -18,7 +18,7 @@ export type Database = {
           display_name: string | null
           bio: string | null
           avatar_url: string | null
-          preferences: { [key: string]: any } | null
+          preferences: { [key: string]: unknown } | null
           last_sign_in: string | null
           created_at: string
           updated_at: string
@@ -28,7 +28,7 @@ export type Database = {
           display_name?: string | null
           bio?: string | null
           avatar_url?: string | null
-          preferences?: { [key: string]: any } | null
+          preferences?: { [key: string]: unknown } | null
           last_sign_in?: string | null
           created_at?: string
           updated_at?: string
@@ -37,7 +37,7 @@ export type Database = {
           display_name?: string | null
           bio?: string | null
           avatar_url?: string | null
-          preferences?: { [key: string]: any } | null
+          preferences?: { [key: string]: unknown } | null
           last_sign_in?: string | null
           updated_at?: string
         }

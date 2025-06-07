@@ -129,7 +129,7 @@ export async function updateUserAvatar(
 export async function setUserPreference(
   userId: string,
   key: string,
-  value: any
+  value: unknown
 ): Promise<boolean> {
   // First get current preferences
   const { data: profile, error: fetchError } = await supabase
@@ -211,7 +211,7 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
       
       // Try RPC approach as fallback
       try {
-        const { data, error } = await supabase.rpc('create_user_profile', { user_id: userId })
+        const { error } = await supabase.rpc('create_user_profile', { user_id: userId })
         
         if (error) {
           console.error("Error creating profile via RPC:", error)

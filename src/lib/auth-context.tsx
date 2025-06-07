@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 2000)
         })
     }
-  }, [user, loading, profileChecked])
+  }, [user, loading, profileChecked, forceCreateProfile])
 
   // Check profile on interval to ensure it always exists
   useEffect(() => {
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 10000)
     
     return () => clearInterval(intervalId)
-  }, [user])
+  }, [user, forceCreateProfile])
 
   useEffect(() => {
     const checkSession = async () => {
