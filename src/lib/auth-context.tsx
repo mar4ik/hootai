@@ -14,14 +14,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase credentials. Make sure to set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.")
 }
 
-// We create a fresh Supabase client in each function rather than reusing a global instance
+// Create a function to get Supabase client with proper config
+const getSupabaseClient = () => {
+  // Try to use window environment variables if available (for production fallback)
+  const url = typeof window !== 'undefined' && window.ENV_SUPABASE_URL 
+    ? window.ENV_SUPABASE_URL 
+    : supabaseUrl;
+  
+  const key = supabaseAnonKey;
+  
+  if (!url || !key) {
+    console.error("Cannot create Supabase client: missing credentials");
+    return null;
+  }
+  
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: 'supabase.auth.token',
+      detectSessionInUrl: true,
+      flowType: 'implicit',
+    }
+  });
+};
 
+// User type definition
 type User = {
   id: string
   email: string
   avatar_url?: string
 } | null
 
+// Auth context type
 type AuthContextType = {
   user: User
   loading: boolean
@@ -32,31 +57,36 @@ type AuthContextType = {
   forceCreateProfile: () => Promise<void>
 }
 
+// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Auth provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
   const [loading, setLoading] = useState(true)
   const [profileChecked, setProfileChecked] = useState(false)
   const router = useRouter()
-
+  
+  // Effect to check for authentication on mount
   useEffect(() => {
+    // Function to check for a session
     async function checkSession() {
       try {
-        // Always create a fresh client for each check
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: false,
-          }
-        });
+        console.log("Checking for auth session...");
         
-        // Check for existing session
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+          console.error("No Supabase client available");
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Check for session data from cookies/localStorage
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Session check error:", error);
+          console.error("Error getting session:", error);
           setUser(null);
         } else if (data?.session) {
           // Map user data to our format
@@ -90,25 +120,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkSession();
     
     // Set up an event listener for auth state changes
-    const { data: { subscription } } = createClient(supabaseUrl, supabaseAnonKey)
-      .auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event);
-        if (event === 'SIGNED_IN' && session) {
-          const { id, email, user_metadata } = session.user;
-          setUser({
-            id,
-            email: email || '',
-            avatar_url: user_metadata?.avatar_url,
+    let subscription: { unsubscribe: () => void } | null = null;
+    
+    try {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log('Auth state changed:', event);
+          if (event === 'SIGNED_IN' && session) {
+            const { id, email, user_metadata } = session.user;
+            setUser({
+              id,
+              email: email || '',
+              avatar_url: user_metadata?.avatar_url,
+            });
+            console.log("User signed in:", id);
+          } else if (event === 'SIGNED_OUT') {
+            setUser(null);
+            console.log("User signed out");
+          }
+        });
+        
+        subscription = data.subscription;
+      }
+    } catch (err) {
+      console.error("Error setting up auth listener:", err);
+    }
+    
+    // Also check for auth_success cookie as fallback
+    if (typeof window !== 'undefined') {
+      const authSuccessCookie = document.cookie.match(/auth_success=([^;]+)/);
+      const userIdCookie = document.cookie.match(/user_id=([^;]+)/);
+      
+      if (authSuccessCookie && authSuccessCookie[1] === 'true' && userIdCookie && userIdCookie[1]) {
+        console.log("Found auth success cookie with user ID:", userIdCookie[1]);
+        
+        // Force refresh the session
+        const supabase = getSupabaseClient();
+        if (supabase) {
+          supabase.auth.getSession().then(({ data }) => {
+            if (data?.session) {
+              const { id, email, user_metadata } = data.session.user;
+              setUser({
+                id,
+                email: email || '',
+                avatar_url: user_metadata?.avatar_url,
+              });
+              console.log("Session refreshed from cookie for user:", id);
+            }
           });
-          console.log("User signed in:", id);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          console.log("User signed out");
         }
-      });
+      }
+    }
     
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
@@ -156,65 +224,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, loading, profileChecked]);
 
   const signIn = async (email: string) => {
-    if (supabaseUrl && supabaseAnonKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        
-        return { error };
-      } catch (err) {
-        console.error("Error during email sign-in:", err);
-        return { 
-          error: err instanceof Error ? err : new Error("Unknown error during email sign-in") 
-        };
-      }
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return { 
+        error: new Error("Supabase is not configured properly. Check your environment variables.")
+      };
     }
     
-    return { 
-      error: new Error("Supabase is not configured properly. Check your environment variables.")
-    };
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      return { error };
+    } catch (err) {
+      console.error("Error during email sign-in:", err);
+      return { 
+        error: err instanceof Error ? err : new Error("Unknown error during email sign-in") 
+      };
+    }
   };
 
   const signInWithGoogle = async () => {
-    // Regular Supabase sign-in with Google
-    if (supabaseUrl) {
-      try {
-        console.log("Starting Google OAuth flow with DIRECT browser redirect...");
-        
-        // Get the Supabase Google OAuth URL directly
-        const redirectUrl = `${window.location.origin}/auth/callback`;
-        const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
-        
-        console.log("Redirecting directly to:", googleAuthUrl);
-        
-        // Force a direct browser redirect to bypass Supabase JS client
-        window.location.href = googleAuthUrl;
-        
-        // We don't actually return since we're redirecting
-        return { error: null };
-      } catch (err) {
-        console.error("Unexpected error during Google sign-in:", err);
+    try {
+      console.log("Starting Google OAuth flow with DIRECT browser redirect...");
+      
+      // Try to use window environment variables if available (for production fallback)
+      const url = typeof window !== 'undefined' && window.ENV_SUPABASE_URL 
+        ? window.ENV_SUPABASE_URL 
+        : supabaseUrl;
+      
+      if (!url) {
         return { 
-          error: err instanceof Error ? err : new Error("Unknown error during Google sign-in") 
+          error: new Error("Supabase URL is not configured properly.")
         };
       }
+      
+      // Get the Supabase Google OAuth URL directly
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const googleAuthUrl = `${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
+      
+      console.log("Redirecting directly to:", googleAuthUrl);
+      
+      // Force a direct browser redirect to bypass Supabase JS client
+      window.location.href = googleAuthUrl;
+      
+      // We don't actually return since we're redirecting
+      return { error: null };
+    } catch (err) {
+      console.error("Unexpected error during Google sign-in:", err);
+      return { 
+        error: err instanceof Error ? err : new Error("Unknown error during Google sign-in") 
+      };
     }
-    
-    // If Supabase is not configured, return a configuration error
-    return { 
-      error: new Error("Supabase is not configured. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment variables.") 
-    };
   };
 
   const signOut = async () => {
     try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      await supabase.auth.signOut();
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       
       // Clear any persistent storage
       if (typeof window !== 'undefined') {
@@ -241,7 +314,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = async () => {
     setLoading(true);
     try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        setUser(null);
+        router.push('/auth/sign-in');
+        return;
+      }
+      
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -258,30 +337,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: email || '',
           avatar_url: user_metadata?.avatar_url,
         });
+        
+        // Ensure user profile exists
+        try {
+          await ensureUserProfile(id);
+          setProfileChecked(true);
+        } catch (err) {
+          console.error("Error ensuring profile exists:", err);
+        }
       } else {
+        console.log("No session found during refresh");
         setUser(null);
-        router.push('/auth/sign-in');
       }
-    } catch (error) {
-      console.error('Error refreshing session:', error);
+    } catch (err) {
+      console.error("Error refreshing session:", err);
       setUser(null);
-      router.push('/auth/sign-in');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithGoogle, signOut, refreshSession, forceCreateProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        refreshSession,
+        forceCreateProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
+// Hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 } 
