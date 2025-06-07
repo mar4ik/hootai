@@ -13,7 +13,7 @@ export default function SignUp() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const { signIn, signInWithGoogle, user } = useAuth()
+  const { signUp, user } = useAuth()
 
   const validateEmail = (email: string): boolean => {
     // Basic email validation regex
@@ -42,43 +42,56 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      const response = await signIn(email)
+      // Use a temporary password for sign-up
+      // In a real application, you'd want to prompt the user for a password
+      const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).toUpperCase().slice(-2) + "!1"
       
-      if (response.error) {
-        setMessage({ type: "error", text: response.error.message })
-      } else {
-        setMessage({ 
-          type: "success", 
-          text: "Check your email for a confirmation link!" 
-        })
-      }
-    } catch {
+      await signUp(email, tempPassword)
+      
+      setMessage({ 
+        type: "success", 
+        text: "Check your email for a confirmation link!" 
+      })
+    } catch (error) {
       setMessage({ 
         type: "error", 
-        text: "An unexpected error occurred. Please try again." 
+        text: error instanceof Error ? error.message : "An unexpected error occurred. Please try again." 
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleGoogleSignUp = async () => {
-    setMessage(null)
-    setIsGoogleLoading(true)
-    
+  const handleGoogleSignUp = () => {
     try {
-      const { error } = await signInWithGoogle()
+      setIsGoogleLoading(true)
+      console.log("Starting Google OAuth flow for sign-up...")
       
-      if (error) {
-        setMessage({ type: "error", text: error.message })
+      // Get required environment variables
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      
+      if (!supabaseUrl) {
+        setMessage({ type: "error", text: "Missing Supabase URL configuration" })
+        setIsGoogleLoading(false)
+        return
       }
-      // No need to set success message as it redirects to Google
-    } catch {
+      
+      // Construct the redirect URL
+      const redirectUrl = `${window.location.origin}/auth/login-callback`
+      
+      // Construct Google OAuth URL directly
+      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
+      
+      console.log("Redirecting to:", googleAuthUrl)
+      
+      // Redirect browser directly to Google auth
+      window.location.href = googleAuthUrl
+    } catch (err) {
+      console.error("Error during Google sign-up:", err)
       setMessage({ 
         type: "error", 
-        text: "Failed to connect to Google. Please try again." 
+        text: err instanceof Error ? err.message : "An unknown error occurred"
       })
-    } finally {
       setIsGoogleLoading(false)
     }
   }

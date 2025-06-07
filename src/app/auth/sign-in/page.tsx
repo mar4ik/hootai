@@ -32,7 +32,7 @@ function SignInContent() {
   const [isGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const { signIn, user } = useAuth()
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   
   // Check for auth state
@@ -79,7 +79,45 @@ function SignInContent() {
 
     try {
       console.log("Initiating email sign-in for:", email)
-      const { error } = await signIn(email)
+      
+      // Create a wrapper function to handle the passwordless sign-in
+      const passwordlessSignIn = async (email: string) => {
+        try {
+          // Since auth-context signIn requires password, we'll use a different approach
+          // Get Supabase client
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          
+          if (!supabaseUrl || !supabaseKey) {
+            return { error: new Error("Missing Supabase configuration") }
+          }
+
+          // Use fetch to call the passwordless sign-in API directly
+          const response = await fetch(`${supabaseUrl}/auth/v1/magiclink`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+            },
+            body: JSON.stringify({
+              email,
+              redirect_to: `${window.location.origin}/auth/login-callback`
+            })
+          })
+          
+          if (!response.ok) {
+            const errorData = await response.json()
+            return { error: new Error(errorData.error_description || 'Failed to send magic link') }
+          }
+          
+          return { error: null }
+        } catch (err) {
+          return { error: err instanceof Error ? err : new Error('Unknown error') }
+        }
+      }
+      
+      // Call our passwordless sign-in wrapper
+      const { error } = await passwordlessSignIn(email)
       
       if (error) {
         console.error("Email sign-in error:", error)
@@ -116,7 +154,7 @@ function SignInContent() {
       }
       
       // Construct the redirect URL
-      const redirectUrl = `${window.location.origin}/auth/callback`
+      const redirectUrl = `${window.location.origin}/auth/login-callback`
       
       // Construct Google OAuth URL directly - NO state parameter to avoid mismatch
       const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
