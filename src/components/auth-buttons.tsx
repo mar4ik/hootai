@@ -87,7 +87,7 @@ export function AuthButtons() {
             className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity p-2"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <UserAvatar size="sm" showOwl={false} />
+            <UserAvatar size="sm" />
             <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
           </div>
           
@@ -136,7 +136,7 @@ export function AuthButtons() {
           className="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-white/100 transition-colors"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
-          <UserAvatar size="sm" showOwl={false} />
+          <UserAvatar size="sm" />
           <span className="text-sm truncate max-w-[120px]">
             {user.email}
           </span>

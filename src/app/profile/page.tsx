@@ -17,7 +17,6 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export default function ProfilePage() {
   const { user, loading, forceCreateProfile } = useAuth()
   const router = useRouter()
-  const [showOwl, setShowOwl] = useState(false)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState('')
@@ -257,7 +256,7 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
             
             <div className="mb-8">
-              <UserAvatar size="lg" showOwl={showOwl} className="mb-4 ml-auto mr-auto" />
+              <UserAvatar size="lg" className="mb-4 ml-auto mr-auto" />
               
               {isEditing ? (
                 <div className="space-y-4 w-full max-w-sm">
@@ -323,23 +322,6 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               )}
-              
-              {/* <div className="flex gap-2 justify-center mt-4">
-                <Button 
-                  variant={showOwl ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setShowOwl(true)}
-                >
-                  Show Owl
-                </Button>
-                <Button 
-                  variant={!showOwl ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setShowOwl(false)}
-                >
-                  Show Initials
-                </Button>
-              </div> */}
             </div>
           </div>
           

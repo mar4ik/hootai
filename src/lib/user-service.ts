@@ -90,7 +90,7 @@ export async function updateUserAvatar(
 ): Promise<string | null> {
   // Upload avatar to storage
   const fileName = `${userId}-${Date.now()}`
-  const { data: uploadData, error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from('avatars')
     .upload(fileName, avatarFile, {
       cacheControl: '3600',

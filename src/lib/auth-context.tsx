@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { updateLastSignInTime, getUserProfile, ensureUserProfile } from "./user-service"
+import { getUserProfile, ensureUserProfile } from "./user-service"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -15,9 +15,6 @@ const isSupabaseConfigured = supabaseUrl && supabaseAnonKey
 const supabase = isSupabaseConfigured 
   ? createClient(supabaseUrl, supabaseAnonKey) 
   : null
-
-// Development mode flag
-//const DEV_MODE = !isSupabaseConfigured || process.env.NODE_ENV === "development"
 
 type User = {
   id: string
@@ -202,16 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string) => {
-    // In development mode without Supabase, simulate successful login
-    // if (DEV_MODE) {
-    //   // Set a development user
-    //   setUser({
-    //     id: "dev-user-id",
-    //     email: email || "dev@example.com",
-    //   })
-    //   return { error: null }
-    // }
-    
     // Regular Supabase sign-in
     if (supabase) {
       const { error } = await supabase.auth.signInWithOtp({
@@ -230,16 +217,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    // In development mode without Supabase, simulate successful login
-    // if (DEV_MODE) {
-    //   // Set a development user
-    //   setUser({
-    //     id: "dev-user-id",
-    //     email: "google-user@example.com",
-    //   })
-    //   return { error: null }
-    // }
-    
     // Regular Supabase sign-in with Google
     if (supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -258,12 +235,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    // if (DEV_MODE) {
-    //   // Just clear the user state in development mode
-    //   setUser(null)
-    //   return
-    // }
-    
     if (supabase) {
       await supabase.auth.signOut()
     }
