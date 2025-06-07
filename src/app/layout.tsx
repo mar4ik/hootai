@@ -24,6 +24,17 @@ export const metadata: Metadata = {
   }
 }
 
+// Check environment variables are available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+
+// Log environment status in a way that doesn't expose keys
+console.log(`[Root Layout] Supabase URL configured: ${supabaseUrl ? 'Yes' : 'No'}`)
+console.log(`[Root Layout] Supabase key length: ${supabaseAnonKey.length}`)
+
+// Special fallback for development
+const AUTH_FALLBACK_URL = 'https://eaennrqqtlmanbivdhqm.supabase.co';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,6 +51,16 @@ export default function RootLayout({
               (function() {
                 document.documentElement.classList.add('light');
                 document.documentElement.style.colorScheme = 'light';
+                
+                // Check for environment variables
+                console.log("Environment check from inline script - has SUPABASE_URL:", 
+                  typeof window !== 'undefined' && !!window.ENV_SUPABASE_URL);
+                
+                // Set fallback URL if needed for production
+                if (typeof window !== 'undefined' && !window.ENV_SUPABASE_URL) {
+                  console.log("Setting fallback Supabase URL");
+                  window.ENV_SUPABASE_URL = "${AUTH_FALLBACK_URL}";
+                }
               })()
             `
           }}
@@ -55,6 +76,27 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-1NXXGW8Z77');
+            
+            // Make environment variables available to client-side scripts
+            window.ENV_SUPABASE_URL = "${supabaseUrl || AUTH_FALLBACK_URL}";
+            window.ENV_HAS_KEYS = ${Boolean(supabaseUrl && supabaseAnonKey)};
+            
+            // Production fallback helper function
+            window.checkAndResetAuth = function() {
+              try {
+                localStorage.removeItem('supabase.auth.token');
+                document.cookie.split(";").forEach(function(c) {
+                  document.cookie = c
+                    .replace(/^ +/, "")
+                    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                console.log("Auth state reset");
+                return true;
+              } catch(e) {
+                console.error("Failed to reset auth:", e);
+                return false;
+              }
+            };
           `}
         </Script>
       </head>

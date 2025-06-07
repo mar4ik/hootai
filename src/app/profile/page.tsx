@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
 // Check if we're in development mode
-const isDevelopment = process.env.NODE_ENV === 'development';
+const _isDevelopment = process.env.NODE_ENV === 'development';
 
 export default function ProfilePage() {
   const { user, loading, forceCreateProfile } = useAuth()
@@ -252,106 +252,138 @@ export default function ProfilePage() {
             </div>
           )}
           
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
-            
-            <div className="mb-8">
-              <UserAvatar size="lg" className="mb-4 ml-auto mr-auto" />
-              
-              {isEditing ? (
-                <div className="space-y-4 w-full max-w-sm">
-                  <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                    <Input
-                      id="displayName"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Enter your display name"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                    <Textarea
-                      id="bio"
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      placeholder="Tell us about yourself"
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2 justify-center">
-                    <Button 
-                      onClick={handleSaveProfile} 
-                      disabled={isSaving}
-                      className="flex items-center gap-1"
-                    >
-                      <Save size={16} />
-                      {isSaving ? "Saving..." : "Save Profile"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+          <div className="flex flex-col items-center justify-center text-center">
+            <UserAvatar size="lg" className="mb-4" />
+            <h1 className="text-2xl font-bold">Your Profile</h1>
+            <p className="text-gray-600 mt-1">{user.email}</p>
+          </div>
+          
+          <div className="space-y-4">
+            {isEditing ? (
+              // Edit Mode
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }}>
+                <div>
+                  <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Display Name
+                  </label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your display name"
+                    maxLength={50}
+                  />
                 </div>
-              ) : (
-                <div className="mb-4 ml-auto mr-auto">
-                  <h2 className="text-xl font-medium">
-                    {profile?.display_name || user.email?.split('@')[0] || 'User'}
-                  </h2>
-                  <p className="text-gray-600 my-2">
-                    {profile?.bio || 'No bio yet'}
-                  </p>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {user.email}
-                  </p>
-                  
+                
+                <div>
+                  <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                    Bio
+                  </label>
+                  <Textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="A short bio about yourself"
+                    maxLength={250}
+                    rows={4}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{bio.length}/250 characters</p>
+                </div>
+                
+                <div className="flex justify-center gap-3 pt-2">
                   <Button 
+                    type="button" 
                     variant="outline" 
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-1 ml-auto mr-auto"
-                    disabled={!profile}
+                    onClick={() => setIsEditing(false)}
                   >
-                    <Edit size={14} />
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSaving}
+                    className="flex items-center gap-1"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        Save Profile
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              // View Mode
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-sm font-medium text-gray-700 mb-1">Display Name</h2>
+                  <p className="p-2 bg-gray-50 rounded border border-gray-100">
+                    {profile?.display_name || "Not set"}
+                  </p>
+                </div>
+                
+                <div>
+                  <h2 className="text-sm font-medium text-gray-700 mb-1">Bio</h2>
+                  <p className="p-2 bg-gray-50 rounded border border-gray-100 min-h-[80px] whitespace-pre-wrap">
+                    {profile?.bio || "No bio added yet"}
+                  </p>
+                </div>
+                
+                <div className="flex justify-center pt-2">
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1"
+                    // Enable the button even if profile is null - it will create one when saving
+                    disabled={false}
+                  >
+                    <Edit size={16} />
                     Edit Profile
                   </Button>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+          
+          <div className="pt-4 border-t">
+            <h3 className="text-sm font-medium text-gray-700">Account Details</h3>
+            <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+              <div>
+                <p className="text-gray-500">User ID</p>
+                <p className="font-mono text-xs bg-gray-50 p-1 rounded mt-1 overflow-hidden overflow-ellipsis">
+                  {user?.id}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Email</p>
+                <p className="bg-gray-50 p-1 rounded mt-1">
+                  {user?.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Profile Created</p>
+                <p className="bg-gray-50 p-1 rounded mt-1">
+                  {formatDate(profile?.created_at)}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Last Updated</p>
+                <p className="bg-gray-50 p-1 rounded mt-1">
+                  {formatDate(profile?.updated_at)}
+                </p>
+              </div>
             </div>
           </div>
           
-          {/* Account Information - only visible in development */}
-          {isDevelopment && (
-            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-              <h2 className="text-lg font-medium mb-2">Account Information</h2>
-              <p className="text-sm mb-2">User ID: <span className="font-mono bg-white px-2 py-1 rounded">{user.id}</span></p>
-              <p className="text-sm mb-2">Email: <span className="font-mono bg-white px-2 py-1 rounded">{user.email}</span></p>
-              <p className="text-sm">Last Sign In: <span className="font-mono bg-white px-2 py-1 rounded">
-                {formatDate(profile?.last_sign_in)}
-              </span></p>
-            </div>
-          )}
-          
-          <div className="flex justify-between">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <ArrowLeft size={14} /> Back to Main
-              </Button>
+          <div className="flex justify-center pt-4">
+            <Link href="/" className="flex items-center gap-1 text-sm text-gray-600">
+              <ArrowLeft size={14} /> Back to Home
             </Link>
-            
-            {/* Protected Page button - only visible in development */}
-            {isDevelopment && (
-              <Link href="/protected">
-                <Button variant="outline" size="sm">
-                  Protected Page
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
       </div>

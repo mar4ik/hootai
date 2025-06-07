@@ -1,10 +1,23 @@
-import { supabase } from './supabase'
-import type { Database } from './supabase'
+import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
 
-export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+// Get Supabase credentials
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Create a singleton client for this service
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export type UserProfile = {
+  id: string
+  created_at: string
+  display_name: string | null
+  bio: string | null
+  avatar_url: string | null
+}
 
 /**
- * Fetch a user's profile by their user ID
+ * Get user profile from the database
  */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const { data, error } = await supabase
@@ -12,73 +25,91 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     .select('*')
     .eq('id', userId)
     .single()
-
+  
   if (error) {
     console.error('Error fetching user profile:', error)
     return null
   }
-
+  
   return data
 }
 
 /**
- * Update a user's profile
+ * Ensure user profile exists, create it if it doesn't
+ */
+export async function ensureUserProfile(userId: string): Promise<UserProfile | null> {
+  // First check if the profile already exists
+  const existingProfile = await getUserProfile(userId)
+  
+  if (existingProfile) {
+    console.log('User profile already exists:', userId)
+    return existingProfile
+  }
+  
+  console.log('Creating new user profile for:', userId)
+  
+  // Create a new profile if it doesn't exist
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .insert([
+      {
+        id: userId,
+        display_name: null,
+        bio: null,
+        avatar_url: null,
+      },
+    ])
+    .select()
+  
+  if (error) {
+    console.error('Error creating user profile:', error)
+    return null
+  }
+  
+  return data[0]
+}
+
+/**
+ * Update user profile
  */
 export async function updateUserProfile(
   userId: string,
-  profile: Partial<Database['public']['Tables']['user_profiles']['Update']>
+  profile: Partial<UserProfile>
 ): Promise<UserProfile | null> {
-  // Add updated_at timestamp
-  const updatedProfile = {
-    ...profile,
-    updated_at: new Date().toISOString(),
-  }
-
   const { data, error } = await supabase
     .from('user_profiles')
-    .update(updatedProfile)
+    .update({
+      ...profile,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', userId)
     .select()
-    .single()
-
+  
   if (error) {
     console.error('Error updating user profile:', error)
     return null
   }
-
-  return data
+  
+  return data[0]
 }
 
 /**
- * Update the last sign-in time for a user
+ * Update last sign in time
  */
 export async function updateLastSignInTime(userId: string): Promise<boolean> {
-  try {
-    // Try to update the last_sign_in time directly
-    // This will work if the column exists, and fail gracefully if it doesn't
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({
-        last_sign_in: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-
-    if (updateError) {
-      // If we get a specific error about the column not existing
-      if (updateError.message && updateError.message.includes('column "last_sign_in" of relation "user_profiles" does not exist')) {
-        console.warn('The last_sign_in column does not exist. Please run the migration script.')
-      } else {
-        console.error('Error updating last sign-in time:', updateError)
-      }
-      return false
-    }
-
-    return true
-  } catch (err) {
-    console.error('Unexpected error updating last sign-in time:', err)
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({
+      last_sign_in: new Date().toISOString(),
+    })
+    .eq('id', userId)
+  
+  if (error) {
+    console.error('Error updating last sign in time:', error)
     return false
   }
+  
+  return true
 }
 
 /**
@@ -164,93 +195,4 @@ export async function setUserPreference(
   }
 
   return true
-}
-
-/**
- * Ensure a user profile exists for the given user ID
- * This is a more robust function that tries multiple approaches to ensure a profile exists
- */
-export async function ensureUserProfile(userId: string): Promise<UserProfile | null> {
-  console.log("Ensuring user profile exists for:", userId)
-  
-  try {
-    // First check if profile already exists
-    const existingProfile = await getUserProfile(userId)
-    
-    if (existingProfile) {
-      console.log("User profile already exists")
-      
-      // Update last sign-in time
-      await updateLastSignInTime(userId)
-      return existingProfile
-    }
-    
-    console.log("No profile found, creating new one")
-    
-    // Try direct insert first
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert([{ 
-          id: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          last_sign_in: new Date().toISOString()
-        }])
-        .select()
-      
-      if (error) {
-        console.error("Error creating profile via insert:", error)
-        throw error
-      }
-      
-      console.log("Created user profile via insert")
-      return data[0]
-    } catch (insertError) {
-      console.error("Insert approach failed:", insertError)
-      
-      // Try RPC approach as fallback
-      try {
-        const { error } = await supabase.rpc('create_user_profile', { user_id: userId })
-        
-        if (error) {
-          console.error("Error creating profile via RPC:", error)
-          throw error
-        }
-        
-        console.log("Created user profile via RPC")
-        
-        // Fetch the newly created profile
-        return await getUserProfile(userId)
-      } catch (rpcError) {
-        console.error("RPC approach failed:", rpcError)
-        
-        // Try raw SQL as a last resort
-        try {
-          const { error } = await supabase.rpc('execute_sql', {
-            sql_query: `
-              INSERT INTO public.user_profiles (id, created_at, updated_at, last_sign_in)
-              VALUES ('${userId}', now(), now(), now())
-              ON CONFLICT (id) DO UPDATE
-              SET updated_at = now(), last_sign_in = now()
-            `
-          })
-          
-          if (error) {
-            console.error("Error creating profile via SQL:", error)
-            throw error
-          }
-          
-          console.log("Created or updated user profile via SQL")
-          return await getUserProfile(userId)
-        } catch (sqlError) {
-          console.error("All approaches failed:", sqlError)
-          return null
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Error ensuring user profile:", err)
-    return null
-  }
 } 
