@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Save, Edit, RefreshCw, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, Edit, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
 import { getUserProfile, updateUserProfile, UserProfile } from "@/lib/user-service"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,8 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isFixing, setIsFixing] = useState(false)
   const [loadingTimeout, setLoadingTimeout] = useState(false)
+  const [showAccountDetails, setShowAccountDetails] = useState(false)
+  const [saveAttempts, setSaveAttempts] = useState(0)
 
   // Set up a timeout for loading state
   useEffect(() => {
@@ -131,7 +133,8 @@ export default function ProfilePage() {
       } else {
         setErrorMessage("Still unable to load profile. Please contact support.")
       }
-    } catch (_) {
+    } catch (err) {
+      console.error("Error fixing profile:", err)
       setErrorMessage("Error fixing profile. Please try again or contact support.")
     } finally {
       setIsFixing(false)
@@ -150,22 +153,56 @@ export default function ProfilePage() {
     if (!user) return
     
     setIsSaving(true)
+    setSaveAttempts(prev => prev + 1)
     
     try {
+      console.log(`Profile save attempt ${saveAttempts + 1} for user:`, user.id, {
+        display_name: displayName,
+        bio: bio
+      })
+      
       const updatedProfile = await updateUserProfile(user.id, {
         display_name: displayName,
         bio: bio
       })
       
       if (updatedProfile) {
+        console.log("Profile updated successfully:", updatedProfile)
         setProfile(updatedProfile)
         setIsEditing(false)
+        setErrorMessage(null)
       } else {
-        setErrorMessage("Unable to save profile. Try fixing your profile first.")
+        console.error("Profile update returned null")
+        
+        // Try to create profile if update failed and we haven't tried creating one
+        if (saveAttempts === 0) {
+          console.log("Attempting to create profile first and then update")
+          await forceCreateProfile()
+          
+          // Wait a moment for the creation to complete
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          // Try updating again
+          const retryProfile = await updateUserProfile(user.id, {
+            display_name: displayName,
+            bio: bio
+          })
+          
+          if (retryProfile) {
+            console.log("Profile update succeeded after creation:", retryProfile)
+            setProfile(retryProfile)
+            setIsEditing(false)
+            setErrorMessage(null)
+          } else {
+            setErrorMessage("Unable to save profile. Please try fixing your profile first.")
+          }
+        } else {
+          setErrorMessage("Unable to save profile. Try fixing your profile first.")
+        }
       }
     } catch (error) {
       console.error("Error saving profile:", error)
-      setErrorMessage("Error saving profile. Please try again.")
+      setErrorMessage(`Error saving profile: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`)
     } finally {
       setIsSaving(false)
     }
@@ -350,34 +387,48 @@ export default function ProfilePage() {
             )}
           </div>
           
+          {/* Collapsible Account Details Section */}
           <div className="pt-4 border-t">
-            <h3 className="text-sm font-medium text-gray-700">Account Details</h3>
-            <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-              <div>
-                <p className="text-gray-500">User ID</p>
-                <p className="font-mono text-xs bg-gray-50 p-1 rounded mt-1 overflow-hidden overflow-ellipsis">
-                  {user?.id}
-                </p>
+            <button
+              onClick={() => setShowAccountDetails(!showAccountDetails)}
+              className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
+            >
+              <span>Account Details</span>
+              {showAccountDetails ? (
+                <ChevronUp size={16} className="text-gray-500" />
+              ) : (
+                <ChevronDown size={16} className="text-gray-500" />
+              )}
+            </button>
+            
+            {showAccountDetails && (
+              <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+                <div>
+                  <p className="text-gray-500">User ID</p>
+                  <p className="font-mono text-xs bg-gray-50 p-1 rounded mt-1 overflow-hidden overflow-ellipsis">
+                    {user?.id}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Email</p>
+                  <p className="bg-gray-50 p-1 rounded mt-1">
+                    {user?.email}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Profile Created</p>
+                  <p className="bg-gray-50 p-1 rounded mt-1">
+                    {formatDate(profile?.created_at)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Last Updated</p>
+                  <p className="bg-gray-50 p-1 rounded mt-1">
+                    {formatDate(profile?.updated_at)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-500">Email</p>
-                <p className="bg-gray-50 p-1 rounded mt-1">
-                  {user?.email}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Profile Created</p>
-                <p className="bg-gray-50 p-1 rounded mt-1">
-                  {formatDate(profile?.created_at)}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Last Updated</p>
-                <p className="bg-gray-50 p-1 rounded mt-1">
-                  {formatDate(profile?.updated_at)}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
           
           <div className="flex justify-center pt-4">

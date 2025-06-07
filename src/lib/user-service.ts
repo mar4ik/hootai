@@ -4,8 +4,28 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Create a singleton client for this service
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a function to get Supabase client with proper config
+const getSupabaseClient = () => {
+  // Try to use window environment variables if available (for production fallback)
+  const url = typeof window !== 'undefined' && window.ENV_SUPABASE_URL 
+    ? window.ENV_SUPABASE_URL 
+    : supabaseUrl;
+  
+  // Fallback URL for production
+  const fallbackUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
+  
+  // Use fallback if needed
+  const effectiveUrl = url || fallbackUrl;
+  
+  const key = supabaseAnonKey;
+  
+  if (!effectiveUrl || !key) {
+    console.error("Cannot create Supabase client: missing credentials");
+    return null;
+  }
+  
+  return createClient(effectiveUrl, key);
+};
 
 export type UserProfile = {
   id: string
@@ -20,6 +40,12 @@ export type UserProfile = {
  * Get user profile from the database
  */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -47,6 +73,12 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
   }
   
   console.log('Creating new user profile for:', userId)
+  
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return null;
+  }
   
   // Create a new profile if it doesn't exist
   const { data, error } = await supabase
@@ -76,6 +108,14 @@ export async function updateUserProfile(
   userId: string,
   profile: Partial<UserProfile>
 ): Promise<UserProfile | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return null;
+  }
+  
+  console.log('Updating profile for user:', userId, profile);
+  
   const { data, error } = await supabase
     .from('user_profiles')
     .update({
@@ -90,6 +130,7 @@ export async function updateUserProfile(
     return null
   }
   
+  console.log('Profile update successful:', data);
   return data[0]
 }
 
@@ -97,6 +138,12 @@ export async function updateUserProfile(
  * Update last sign in time
  */
 export async function updateLastSignInTime(userId: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return false;
+  }
+  
   const { error } = await supabase
     .from('user_profiles')
     .update({
@@ -119,6 +166,12 @@ export async function updateUserAvatar(
   userId: string,
   avatarFile: File
 ): Promise<string | null> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return null;
+  }
+  
   // Upload avatar to storage
   const fileName = `${userId}-${Date.now()}`
   const { error: uploadError } = await supabase.storage
@@ -162,6 +215,12 @@ export async function setUserPreference(
   key: string,
   value: unknown
 ): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Failed to initialize Supabase client');
+    return false;
+  }
+  
   // First get current preferences
   const { data: profile, error: fetchError } = await supabase
     .from('user_profiles')
