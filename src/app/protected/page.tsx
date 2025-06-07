@@ -36,7 +36,7 @@ export default function ProtectedPage() {
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg border border-gray-100 p-6 space-y-6">
           <div className="flex flex-col items-center text-center">
-            <UserAvatar size="lg" showOwl={false} className="mb-4" />
+            <UserAvatar size="lg" className="mb-4" />
             <h1 className="text-3xl font-bold">Protected Content</h1>
             <p className="mt-2 text-gray-600">
               Welcome, {user.email}! This page is only visible to authenticated users.

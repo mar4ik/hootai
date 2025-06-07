@@ -1,5 +1,16 @@
 # Coding Standards
 
+## Node.js Version Requirements
+
+This project requires Node.js version 18.18.0 or higher due to Next.js 15+ requirements. Using an older version of Node.js will result in build failures.
+
+To ensure you're using the correct version:
+- Check your Node.js version with `node -v`
+- If needed, update using a version manager like `nvm`, `n`, or `fnm`: 
+  - With `n`: `sudo n lts` (to install the latest LTS version)
+  - With `nvm`: `nvm install --lts` (to install the latest LTS version)
+- The project includes a `.nvmrc` file specifying the recommended version
+
 ## Avoiding Unused Variable Errors
 
 To prevent errors related to unused variables in our codebase, please follow these guidelines:

@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Requirements
+
+- Node.js version 18.18.0 or higher (Next.js 15+ requirement)
+- Supabase account for authentication and database
+
 ## Getting Started
 
 1. Create a `.env.local` file in the root directory with the following variables:

@@ -9,8 +9,11 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
+// Import the core-web-vitals and typescript configs from Next.js
+const nextConfigs = compat.extends("next/core-web-vitals", "next/typescript");
+
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextConfigs,
   {
     rules: {
       '@typescript-eslint/ban-ts-comment': 'warn',
@@ -18,6 +21,7 @@ const eslintConfig = [
       'react/display-name': 'off',
       'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      // Allow unused variables that start with underscore
       '@typescript-eslint/no-unused-vars': ['error', { 
         'argsIgnorePattern': '^_',
         'varsIgnorePattern': '^_',

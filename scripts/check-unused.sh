@@ -2,6 +2,19 @@
 
 # Script to check for unused variables and other common issues before deployment
 
+# Check Node.js version
+echo "Checking Node.js version..."
+NODE_VERSION=$(node -v)
+NODE_MAJOR_VERSION=$(echo $NODE_VERSION | cut -d "." -f 1 | sed 's/v//')
+
+if [ $NODE_MAJOR_VERSION -lt 18 ]; then
+  echo "❌ Node.js version $NODE_VERSION is too old. This project requires v18.18.0 or higher."
+  echo "Please update your Node.js version before deploying."
+  exit 1
+else
+  echo "✅ Node.js version $NODE_VERSION is compatible."
+fi
+
 echo "Checking for linting issues..."
 
 # Run ESLint to check for unused variables and other issues
