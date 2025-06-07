@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Save, Edit, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowLeft, Save, Edit, RefreshCw, Loader2 } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
-import { getUserProfile, updateUserProfile, UserProfile } from "@/lib/user-service"
+import { getUserProfile, updateUserProfile, UserProfile, ensureUserProfile } from "@/lib/user-service"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -25,7 +25,6 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isFixing, setIsFixing] = useState(false)
   const [loadingTimeout, setLoadingTimeout] = useState(false)
-  const [showAccountDetails, setShowAccountDetails] = useState(false)
   const [saveAttempts, setSaveAttempts] = useState(0)
 
   // Set up a timeout for loading state
@@ -82,6 +81,10 @@ export default function ProfilePage() {
       if (user) {
         try {
           console.log("Loading profile for user:", user.id)
+          // First ensure the profile exists
+          await ensureUserProfile(user.id)
+          
+          // Then load the profile
           const userProfile = await getUserProfile(user.id)
           
           if (!userProfile) {
@@ -161,6 +164,13 @@ export default function ProfilePage() {
         bio: bio
       })
       
+      // First ensure the profile exists
+      await ensureUserProfile(user.id)
+      
+      // Wait a moment to let the creation complete if needed
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Now update the profile
       const updatedProfile = await updateUserProfile(user.id, {
         display_name: displayName,
         bio: bio
@@ -174,30 +184,21 @@ export default function ProfilePage() {
       } else {
         console.error("Profile update returned null")
         
-        // Try to create profile if update failed and we haven't tried creating one
-        if (saveAttempts === 0) {
-          console.log("Attempting to create profile first and then update")
-          await forceCreateProfile()
-          
-          // Wait a moment for the creation to complete
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          
-          // Try updating again
-          const retryProfile = await updateUserProfile(user.id, {
-            display_name: displayName,
-            bio: bio
-          })
-          
-          if (retryProfile) {
-            console.log("Profile update succeeded after creation:", retryProfile)
-            setProfile(retryProfile)
-            setIsEditing(false)
-            setErrorMessage(null)
-          } else {
-            setErrorMessage("Unable to save profile. Please try fixing your profile first.")
-          }
+        // Try again after a short delay
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const retryProfile = await updateUserProfile(user.id, {
+          display_name: displayName,
+          bio: bio
+        })
+        
+        if (retryProfile) {
+          console.log("Profile update succeeded on retry:", retryProfile)
+          setProfile(retryProfile)
+          setIsEditing(false)
+          setErrorMessage(null)
         } else {
-          setErrorMessage("Unable to save profile. Try fixing your profile first.")
+          setErrorMessage("Unable to save profile. Please try fixing your profile first.")
         }
       }
     } catch (error) {
@@ -207,21 +208,6 @@ export default function ProfilePage() {
       setIsSaving(false)
     }
   }
-
-  // Format date for display
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return 'Never';
-    
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('default', {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-      }).format(date);
-    } catch {
-      return 'Invalid date';
-    }
-  };
 
   // Show loading state with timeout option
   if (loading) {
@@ -382,50 +368,6 @@ export default function ProfilePage() {
                     <Edit size={16} />
                     Edit Profile
                   </Button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Collapsible Account Details Section */}
-          <div className="pt-4 border-t">
-            <button
-              onClick={() => setShowAccountDetails(!showAccountDetails)}
-              className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
-            >
-              <span>Account Details</span>
-              {showAccountDetails ? (
-                <ChevronUp size={16} className="text-gray-500" />
-              ) : (
-                <ChevronDown size={16} className="text-gray-500" />
-              )}
-            </button>
-            
-            {showAccountDetails && (
-              <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-                <div>
-                  <p className="text-gray-500">User ID</p>
-                  <p className="font-mono text-xs bg-gray-50 p-1 rounded mt-1 overflow-hidden overflow-ellipsis">
-                    {user?.id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Email</p>
-                  <p className="bg-gray-50 p-1 rounded mt-1">
-                    {user?.email}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Profile Created</p>
-                  <p className="bg-gray-50 p-1 rounded mt-1">
-                    {formatDate(profile?.created_at)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Last Updated</p>
-                  <p className="bg-gray-50 p-1 rounded mt-1">
-                    {formatDate(profile?.updated_at)}
-                  </p>
                 </div>
               </div>
             )}
