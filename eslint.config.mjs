@@ -17,7 +17,12 @@ const eslintConfig = [
       'react/no-unescaped-entities': 'warn',
       'react/display-name': 'off',
       'react/react-in-jsx-scope': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn'
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { 
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+        'caughtErrorsIgnorePattern': '^_' 
+      }]
     }
   }
 ];

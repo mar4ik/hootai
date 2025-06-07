@@ -83,6 +83,16 @@ export default function WhatIsNextContent() {
       </h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Feature 0 */}
+        <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center mb-3">
+            <span className="text-xl mr-2">✨</span>
+            <h2 className="text-lg font-semibold">UI/UX Audit</h2>
+          </div>
+          <p className="text-[14px] text-gray-800">
+          Hoot.ai integrates directly with your software to perform automated UI and UX audits. We scan your interface, detect design inconsistencies, uncover usability issues, and identify friction points—so you can improve user experience with data-driven insights.
+          </p>
+          </div>
         {/* Feature 1 */}
         <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
           <div className="flex items-center mb-3">
@@ -90,7 +100,7 @@ export default function WhatIsNextContent() {
             <h2 className="text-lg font-semibold">Integrations</h2>
           </div>
           <p className="text-[14px] text-gray-800">
-            Integration with other analytic tools or your software
+          Seamlessly integrate with your analytics tools to get the most out of your data.
           </p>
         </div>
         
