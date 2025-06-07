@@ -181,7 +181,7 @@ export default function ProfilePage() {
         dateStyle: 'medium',
         timeStyle: 'short'
       }).format(date);
-    } catch (e) {
+    } catch (_) {
       return 'Invalid date';
     }
   };
