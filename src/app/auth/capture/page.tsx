@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
-export default function AuthCapturePage() {
+// Main content component with useSearchParams
+function AuthCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('Initializing authentication...');
@@ -118,5 +119,23 @@ export default function AuthCapturePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper with Suspense
+export default function AuthCapturePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-md text-center">
+          <h1 className="text-xl font-bold">Authentication in Progress</h1>
+          <div className="animate-pulse">
+            <p>Loading authentication handler...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <AuthCaptureContent />
+    </Suspense>
   );
 } 

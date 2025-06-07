@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function AuthDebugPage() {
+// Component that safely uses useSearchParams within a Suspense boundary
+function AuthDebugContent() {
   const searchParams = useSearchParams()
   const [isClient, setIsClient] = useState(false)
   const [sessionData, setSessionData] = useState<any>(null)
@@ -163,6 +164,15 @@ export default function AuthDebugPage() {
         />
       </div>
     </div>
+  )
+}
+
+// Main component that uses Suspense
+export default function AuthDebugPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading debug information...</div>}>
+      <AuthDebugContent />
+    </Suspense>
   )
 }
 
