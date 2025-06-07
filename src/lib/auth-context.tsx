@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
   const [loading, setLoading] = useState(true)
   const [profileChecked, setProfileChecked] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -80,12 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log("No active session found");
           setUser(null);
         }
-        
-        setAuthChecked(true);
       } catch (err) {
         console.error("Error checking session:", err);
         setUser(null);
-        setAuthChecked(true);
       } finally {
         setLoading(false);
       }

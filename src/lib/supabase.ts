@@ -1,9 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Create a simple Database type placeholder
-interface CustomDatabase {}
-type Database = CustomDatabase
-
 // Add types for window globals
 declare global {
   interface Window {
@@ -14,22 +10,23 @@ declare global {
 }
 
 // Get environment variables with fallbacks
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Log warning if missing credentials
-if (typeof window !== 'undefined' && (!url || !key)) {
+if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseKey)) {
   console.error('Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
 }
 
 // Add debug console logs for configuration
-console.log(`Supabase URL configured: ${url ? 'Yes' : 'No'}`)
-console.log(`Supabase key length: ${key.length}`)
+console.log(`Supabase URL configured: ${supabaseUrl ? 'Yes' : 'No'}`)
+console.log(`Supabase key length: ${supabaseKey.length}`)
 
 // Check for fallback values from window globals (set in layout.tsx)
-if (typeof window !== 'undefined' && !url && window.ENV_SUPABASE_URL) {
+let finalSupabaseUrl = supabaseUrl;
+if (typeof window !== 'undefined' && !supabaseUrl && window.ENV_SUPABASE_URL) {
   console.log("Using fallback Supabase URL from window.ENV_SUPABASE_URL");
-  url = window.ENV_SUPABASE_URL;
+  finalSupabaseUrl = window.ENV_SUPABASE_URL;
 }
 
 // Detect if we're on a mobile device
@@ -42,7 +39,7 @@ if (isMobileDevice) {
 }
 
 // Type for our database schema
-export type Database = {
+export type DatabaseSchema = {
   public: {
     Tables: {
       user_profiles: {
@@ -108,25 +105,13 @@ const createBrowserClient = () => {
     return null;
   }
 
-  return createClient(url, key, {
+  return createClient<DatabaseSchema>(finalSupabaseUrl, supabaseKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'supabase.auth.token',
       detectSessionInUrl: false, // We handle this manually
       debug: process.env.NODE_ENV !== 'production',
-    },
-    global: {
-      fetch: (url: string, options: RequestInit) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        return fetch(url, {
-          ...options,
-          signal: controller.signal,
-          credentials: 'include',
-        }).finally(() => clearTimeout(timeoutId));
-      }
     }
   });
 }
@@ -134,32 +119,25 @@ const createBrowserClient = () => {
 // Cookie interface for server components
 interface CookieInterface {
   get: (name: string) => string | undefined;
-  set: (name: string, value: string, options?: any) => void;
-  remove: (name: string, options?: any) => void;
+  set: (name: string, value: string, options?: Record<string, unknown>) => void;
+  remove: (name: string, options?: Record<string, unknown>) => void;
 }
 
 // Create a client for server components
-export const createServerClient = (cookies: CookieInterface) => {
-  return createClient(url, key, {
+export const createServerClient = (_cookies: CookieInterface) => {
+  return createClient<DatabaseSchema>(finalSupabaseUrl, supabaseKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
-    },
-    cookies: {
-      get: (name: string) => cookies.get(name),
-      set: (name: string, value: string, options: any) => {
-        cookies.set(name, value, { ...options, path: '/' });
-      },
-      remove: (name: string, options: any) => {
-        cookies.set(name, '', { ...options, path: '/', maxAge: 0 });
-      },
-    },
+    }
   });
 }
 
 // Default client for browser use
-const supabase = typeof window !== 'undefined' ? createBrowserClient() : null;
+const supabaseClient = typeof window !== 'undefined' ? createBrowserClient() : null;
 
-export default supabase;
+// Export as both named and default export
+export const supabase = supabaseClient;
+export default supabaseClient;
 

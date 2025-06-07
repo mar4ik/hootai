@@ -84,10 +84,6 @@ export default function AuthDebugPage() {
     }
   }
   
-  const hasSessionInLS = Object.keys(localStorageData).some(key => 
-    localStorageData[key] && localStorageData[key] !== 'Not found'
-  )
-  
   const resetAuth = () => {
     try {
       localStorage.removeItem('supabase.auth.token')
