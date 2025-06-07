@@ -7,15 +7,18 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Save, Edit, RefreshCw, Loader2 } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
-import { getUserProfile, updateUserProfile, UserProfile, ensureUserProfile } from "@/lib/user-service"
+import { getUserProfile, updateUserProfile, UserProfile, ensureUserProfile, checkProfileExists } from "@/lib/user-service"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/use-toast"
 
 // Check if we're in development mode
 const _isDevelopment = process.env.NODE_ENV === 'development';
+// Check if running in browser
+const isBrowser = typeof window !== 'undefined';
 
 export default function ProfilePage() {
-  const { user, loading, forceCreateProfile } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -50,8 +53,8 @@ export default function ProfilePage() {
     setErrorMessage("Manually loading profile...")
     
     try {
-      // Force create the profile first
-      await forceCreateProfile()
+      // Ensure profile exists
+      await ensureUserProfile(user.id)
       
       // Wait a moment for database to update
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -64,6 +67,13 @@ export default function ProfilePage() {
         setDisplayName(userProfile.display_name || '')
         setBio(userProfile.bio || '')
         setErrorMessage(null)
+        if (isBrowser) {
+          toast({
+            title: "Profile loaded successfully",
+            description: "Your profile information has been loaded.",
+            variant: "default"
+          })
+        }
       } else {
         setErrorMessage("Still unable to load profile. Please try again.")
       }
@@ -81,8 +91,18 @@ export default function ProfilePage() {
       if (user) {
         try {
           console.log("Loading profile for user:", user.id)
-          // First ensure the profile exists
-          await ensureUserProfile(user.id)
+          
+          // First check if profile exists
+          const exists = await checkProfileExists(user.id)
+          
+          if (!exists) {
+            console.log("Profile does not exist, creating it first")
+            // Create profile if it doesn't exist
+            await ensureUserProfile(user.id)
+            
+            // Wait a moment for database to update
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
           
           // Then load the profile
           const userProfile = await getUserProfile(user.id)
@@ -93,6 +113,7 @@ export default function ProfilePage() {
             return
           }
           
+          console.log("Profile loaded:", userProfile)
           setProfile(userProfile)
           setErrorMessage(null)
           
@@ -120,21 +141,24 @@ export default function ProfilePage() {
     setErrorMessage("Fixing profile...")
     
     try {
-      await forceCreateProfile()
+      // First ensure the profile exists
+      const newProfile = await ensureUserProfile(user.id)
       
-      // Wait a moment to let the database update
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Try to load the profile again
-      const userProfile = await getUserProfile(user.id)
-      
-      if (userProfile) {
-        setProfile(userProfile)
-        setDisplayName(userProfile.display_name || '')
-        setBio(userProfile.bio || '')
+      if (newProfile) {
+        console.log("Profile created or found:", newProfile)
+        setProfile(newProfile)
+        setDisplayName(newProfile.display_name || '')
+        setBio(newProfile.bio || '')
         setErrorMessage(null)
+        if (isBrowser) {
+          toast({
+            title: "Profile fixed",
+            description: "Your profile has been repaired successfully.",
+            variant: "default"
+          })
+        }
       } else {
-        setErrorMessage("Still unable to load profile. Please contact support.")
+        setErrorMessage("Still unable to fix profile. Please contact support.")
       }
     } catch (err) {
       console.error("Error fixing profile:", err)
@@ -165,10 +189,15 @@ export default function ProfilePage() {
       })
       
       // First ensure the profile exists
-      await ensureUserProfile(user.id)
+      const profileExists = await checkProfileExists(user.id)
       
-      // Wait a moment to let the creation complete if needed
-      await new Promise(resolve => setTimeout(resolve, 500))
+      if (!profileExists) {
+        console.log("Profile does not exist before save, creating it first")
+        await ensureUserProfile(user.id)
+        
+        // Wait a moment to let the creation complete if needed
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
       
       // Now update the profile
       const updatedProfile = await updateUserProfile(user.id, {
@@ -181,22 +210,44 @@ export default function ProfilePage() {
         setProfile(updatedProfile)
         setIsEditing(false)
         setErrorMessage(null)
+        if (isBrowser) {
+          toast({
+            title: "Profile saved",
+            description: "Your profile has been updated successfully.",
+            variant: "default"
+          })
+        }
       } else {
         console.error("Profile update returned null")
         
-        // Try again after a short delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Create profile directly with data as a fallback
+        const fallbackProfile = await ensureUserProfile(user.id)
         
-        const retryProfile = await updateUserProfile(user.id, {
-          display_name: displayName,
-          bio: bio
-        })
-        
-        if (retryProfile) {
-          console.log("Profile update succeeded on retry:", retryProfile)
-          setProfile(retryProfile)
-          setIsEditing(false)
-          setErrorMessage(null)
+        if (fallbackProfile) {
+          // Wait a moment then try direct update again
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          // Special direct update bypassing the existing logic
+          const directUpdateResult = await updateUserProfile(user.id, {
+            display_name: displayName,
+            bio: bio
+          })
+          
+          if (directUpdateResult) {
+            console.log("Profile update succeeded via fallback method:", directUpdateResult)
+            setProfile(directUpdateResult)
+            setIsEditing(false)
+            setErrorMessage(null)
+            if (isBrowser) {
+              toast({
+                title: "Profile saved",
+                description: "Your profile has been updated successfully.",
+                variant: "default"
+              })
+            }
+          } else {
+            setErrorMessage("Unable to save profile. Please try refreshing the page and trying again.")
+          }
         } else {
           setErrorMessage("Unable to save profile. Please try fixing your profile first.")
         }
