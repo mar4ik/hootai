@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 export default function TeamContent() {
   // Team member data
@@ -50,7 +51,7 @@ export default function TeamContent() {
               <div className="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden">
                 {/* Replace with actual image when available */}
                 <div className="w-full h-full flex items-center justify-center text-3xl">
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                  <Image src={member.image} alt={member.name} className="w-full h-full object-cover" width={96} height={96} />
                 </div>
               </div>
               <h3 className="text-lg font-semibold">{member.name}</h3>

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react"
 import { createClient } from "@supabase/supabase-js"
 import { getUserProfile, ensureUserProfile } from "./user-service"
 
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loading])
 
   // Force create a profile for the current user - can be called anywhere in the app
-  const forceCreateProfile = async () => {
+  const forceCreateProfile = useCallback(async () => {
     if (!user) return
     
     console.log("Force creating profile for user:", user.id)
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Error in force profile creation:", err)
     }
-  }
+  }, [user])
 
   // Add a new effect to ensure profile exists when user is loaded
   useEffect(() => {

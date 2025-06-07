@@ -65,7 +65,7 @@ export default function WhatIsNextContent() {
           stack: error.stack
         });
       } else if (typeof error === 'object' && error !== null) {
-        const errorObj = error as any;
+        const errorObj = error as { status?: string | number; text?: string };
         setSubmitError(`Error (${errorObj.status || 'unknown'}): ${errorObj.text || 'Unknown error'}`);
         console.error('Error object:', errorObj);
       } else {

@@ -131,7 +131,7 @@ export default function ProfilePage() {
       } else {
         setErrorMessage("Still unable to load profile. Please contact support.")
       }
-    } catch (err) {
+    } catch (_) {
       setErrorMessage("Error fixing profile. Please try again or contact support.")
     } finally {
       setIsFixing(false)
@@ -181,7 +181,7 @@ export default function ProfilePage() {
         dateStyle: 'medium',
         timeStyle: 'short'
       }).format(date);
-    } catch (_) {
+    } catch {
       return 'Invalid date';
     }
   };
