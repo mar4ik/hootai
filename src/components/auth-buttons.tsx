@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState, useRef } from "react"
 import { UserAvatar } from "@/components/user-avatar"
-import { LogOut, User, ChevronDown, RefreshCw } from "lucide-react"
+import { LogOut, ChevronDown, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
 // Check if we're in development mode

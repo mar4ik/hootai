@@ -9,6 +9,9 @@ const requiredNodeVersion = '^18.18.0 || ^19.8.0 || >= 20.0.0';
 const currentNodeVersion = process.version;
 let isCompatible = false;
 
+// Check if we should ignore the Node.js version check
+const ignoreNodeVersionCheck = process.env.NEXT_IGNORE_INCORRECT_NODE_VERSION === 'true';
+
 // Simple semver check
 function checkVersion() {
   const current = currentNodeVersion.slice(1).split('.').map(Number);
@@ -33,7 +36,7 @@ function checkVersion() {
 
 isCompatible = checkVersion();
 
-if (!isCompatible) {
+if (!isCompatible && !ignoreNodeVersionCheck) {
   console.error('\x1b[31m%s\x1b[0m', '╔════════════════════════════════════════════════════════════╗');
   console.error('\x1b[31m%s\x1b[0m', '║                    Node.js Version Error                    ║');
   console.error('\x1b[31m%s\x1b[0m', '╚════════════════════════════════════════════════════════════╝');
@@ -65,11 +68,19 @@ if (!isCompatible) {
   
   console.error('2. After installing, run the app with the new Node.js version.');
   console.error();
+  console.error('3. Alternatively, you can bypass this check with:');
+  console.error('   NEXT_IGNORE_INCORRECT_NODE_VERSION=true npm run build');
+  console.error();
   console.error('For help, see the Next.js documentation:');
   console.error('https://nextjs.org/docs/getting-started/installation');
   
   process.exit(1);
 }
 
-// If we get here, we're using a compatible version
-console.log(`✅ Using Node.js ${currentNodeVersion} (compatible with Next.js requirements)`); 
+if (!isCompatible && ignoreNodeVersionCheck) {
+  console.warn(`⚠️ Using Node.js ${currentNodeVersion}, which is not compatible with Next.js requirements.`);
+  console.warn('Continuing anyway as NEXT_IGNORE_INCORRECT_NODE_VERSION is set to true.');
+} else {
+  // If we get here, we're using a compatible version
+  console.log(`✅ Using Node.js ${currentNodeVersion} (compatible with Next.js requirements)`);
+} 

@@ -10,6 +10,7 @@
     "dev": "npm run ensure-node && next dev",
     "start": "npm run ensure-node && next start",
     "build": "npm run ensure-node && next build",
+    "build:force": "next build",
     "lint": "next lint",
     "lint:fix": "eslint \"./src/**/*.{ts,tsx}\" --fix",
     "pre-deploy": "./scripts/check-unused.sh"

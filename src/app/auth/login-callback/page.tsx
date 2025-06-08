@@ -37,7 +37,6 @@ function AuthCallbackContent() {
         // or search params (for OAuth)
         const code = searchParams?.get('code')
         const accessToken = searchParams?.get('access_token')
-        const _refreshToken = searchParams?.get('refresh_token')
         const hash = typeof window !== 'undefined' ? window.location.hash : ''
         
         // If we have any of these, try to exchange them for a session

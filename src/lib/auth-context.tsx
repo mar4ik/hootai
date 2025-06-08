@@ -104,7 +104,7 @@ const getOrInitClient = () => {
 };
 
 // Define types
-export type User = {
+export type _User = {
   id: string
   email: string | undefined
   role?: string
@@ -120,7 +120,7 @@ export type User = {
 }
 
 export type AuthState = {
-  user: User | null
+  user: _User | null
   loading: boolean
   error: string | null
   signUp: (email: string, password: string) => Promise<void>
@@ -159,7 +159,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 // AuthProvider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<_User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -282,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           // Convert Supabase user to our User type
-          const userData: User = {
+          const userData: _User = {
             id: session.user.id,
             email: session.user.email,
             role: session.user.role,
@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           // Convert Supabase user to our User type
-          const userData: User = {
+          const userData: _User = {
             id: session.user.id,
             email: session.user.email,
             role: session.user.role,

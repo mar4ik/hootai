@@ -18,7 +18,7 @@ const eslintConfig = [
     rules: {
       '@typescript-eslint/ban-ts-comment': 'warn',
       'react/no-unescaped-entities': 'warn',
-      'react/display-name': 'off',
+      'react/display-name': 0,
       'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       // Allow unused variables that start with underscore
