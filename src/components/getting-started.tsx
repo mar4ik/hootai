@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAnalysisStore } from "@/lib/store"
 import { AnalysisData } from "@/components/main-content"
-import Image from "next/image"
 
 interface GettingStartedProps {
   onAnalyze: (data: AnalysisData) => void
