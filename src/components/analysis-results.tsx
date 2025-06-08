@@ -1,9 +1,11 @@
 "use client"
 
-import { ArrowLeft, Search, Target, File, Loader2 } from "lucide-react"
+import { ArrowLeft, Search, Target, File, Loader2, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAnalysisStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-context"
 import React from "react"
+import Link from "next/link"
 
 interface AnalysisResultsProps {
   onStartOver: () => void
@@ -17,6 +19,9 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
     error, 
     startAnalysis 
   } = useAnalysisStore()
+  
+  const { user } = useAuth()
+  const isAuthenticated = !!user
 
   const renderSourceInfo = () => {
     if (!analysisData) return null;
@@ -88,7 +93,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
+    <div className="max-w-3xl mx-auto p-8 relative">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-2">
           <span className="text-2xl">😊</span>
@@ -103,7 +108,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
         </button>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-8 relative">
         {renderSourceInfo()}
 
         {result.summary && (
@@ -119,11 +124,19 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           </div>
 
           <ul className="space-y-4 pl-5">
-            {result.problems.map((problem, index) => (
-              <li key={index} className="list-disc list-outside">
-                <span className="font-semibold">{problem.title}:</span> {problem.description}
-              </li>
-            ))}
+            {/* Show 40% of problems for unauthenticated users */}
+            {isAuthenticated 
+              ? result.problems.map((problem, index) => (
+                <li key={index} className="list-disc list-outside">
+                  <span className="font-semibold">{problem.title}:</span> {problem.description}
+                </li>
+              ))
+              : result.problems.slice(0, Math.ceil(result.problems.length * 0.4)).map((problem, index) => (
+                <li key={index} className="list-disc list-outside">
+                  <span className="font-semibold">{problem.title}:</span> {problem.description}
+                </li>
+              ))
+            }
           </ul>
         </div>
 
@@ -133,43 +146,95 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
             <h3 className="text-lg font-semibold">Identified UX Issues</h3>
           </div>
 
-          {result.issues.map((issue) => (
-            <div key={issue.id} className="space-y-2">
-              <h4 className="flex items-center gap-2 font-medium text-blue-700">
-                <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
-              </h4>
+          {/* Show 40% of issues for unauthenticated users */}
+          {isAuthenticated 
+            ? result.issues.map((issue) => (
+              <div key={issue.id} className="space-y-2">
+                <h4 className="flex items-center gap-2 font-medium text-blue-700">
+                  <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
+                </h4>
 
-              <ul className="space-y-4 pl-5">
-                <li className="list-disc list-outside">
-                  <span className="font-semibold">Observation:</span> {issue.observation}
-                </li>
-                <li className="list-disc list-outside">
-                  <span className="font-semibold">Impact:</span> {issue.impact}
-                </li>
-                {issue.suggestion && (
+                <ul className="space-y-4 pl-5">
                   <li className="list-disc list-outside">
-                    <span className="font-semibold">Suggestion:</span> {issue.suggestion}
+                    <span className="font-semibold">Observation:</span> {issue.observation}
                   </li>
-                )}
-                {issue.aptestplan && (
                   <li className="list-disc list-outside">
-                    <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
+                    <span className="font-semibold">Impact:</span> {issue.impact}
                   </li>
-                )}
-                <li className="list-disc list-outside">
-                  <span className="font-semibold">Priority:</span>{' '}
-                  {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
-                  {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
-                  {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
-                  {issue.priorityList}
-                </li>
-                <li className="list-disc list-outside">
-                  <span className="font-semibold">Estimation:</span> {issue.estimation}
-                </li>
-              </ul>
-            </div>
-          ))}
+                  {issue.suggestion && (
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">Suggestion:</span> {issue.suggestion}
+                    </li>
+                  )}
+                  {issue.aptestplan && (
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
+                    </li>
+                  )}
+                  <li className="list-disc list-outside">
+                    <span className="font-semibold">Priority:</span>{' '}
+                    {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
+                    {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
+                    {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
+                    {issue.priorityList}
+                  </li>
+                  <li className="list-disc list-outside">
+                    <span className="font-semibold">Estimation:</span> {issue.estimation}
+                  </li>
+                </ul>
+              </div>
+            ))
+            : result.issues.slice(0, Math.ceil(result.issues.length * 0.4)).map((issue) => (
+              <div key={issue.id} className="space-y-2">
+                <h4 className="flex items-center gap-2 font-medium text-blue-700">
+                  <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
+                </h4>
+
+                <ul className="space-y-4 pl-5">
+                  <li className="list-disc list-outside">
+                    <span className="font-semibold">Observation:</span> {issue.observation}
+                  </li>
+                  <li className="list-disc list-outside">
+                    <span className="font-semibold">Impact:</span> {issue.impact}
+                  </li>
+                  {issue.suggestion && (
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">Suggestion:</span> {issue.suggestion.substring(0, 100)}
+                      {issue.suggestion.length > 100 ? '...' : ''}
+                    </li>
+                  )}
+                </ul>
+              </div>
+            ))
+          }
         </div>
+        
+        {/* Overlay for unauthenticated users */}
+        {!isAuthenticated && (
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white pointer-events-none" style={{ top: '50%' }}>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-white to-transparent p-8 text-center pointer-events-auto">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-3 bg-indigo-100 rounded-full">
+                  <Lock className="h-8 w-8 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-bold">Sign up or sign in to see full analytics</h3>
+                <p className="text-gray-600 mb-4">Get complete insights and actionable recommendations</p>
+                <div className="flex gap-4">
+                  <Link href="/auth/sign-in?return_to=analysis">
+                    <Button variant="outline" className="px-6">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/sign-up?return_to=analysis">
+                    <Button className="px-6 bg-indigo-600 hover:bg-indigo-700">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

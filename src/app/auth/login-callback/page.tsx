@@ -56,13 +56,22 @@ function AuthCallbackContent() {
           // Set a cookie to indicate successful auth (for debugging)
           document.cookie = `auth_success=true; path=/; max-age=86400`
           
+          // Check if we have a return_to value in localStorage
+          const returnTo = localStorage.getItem('auth_return_to')
+          
           // Start countdown for redirect
           const intervalId = setInterval(() => {
             setCountdown(prev => {
               if (prev <= 1) {
                 clearInterval(intervalId)
-                // Redirect after countdown ends
-                router.push('/')
+                // Redirect based on returnTo value
+                if (returnTo === 'analysis') {
+                  // Clear the return_to value
+                  localStorage.removeItem('auth_return_to')
+                  router.push('/')
+                } else {
+                  router.push('/')
+                }
               }
               return prev - 1
             })

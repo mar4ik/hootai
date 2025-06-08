@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 export default function SignUp() {
   const [email, setEmail] = useState("")
@@ -14,6 +15,8 @@ export default function SignUp() {
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const { signUp, user } = useAuth()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams?.get('return_to')
 
   const validateEmail = (email: string): boolean => {
     // Basic email validation regex
@@ -74,6 +77,11 @@ export default function SignUp() {
         setMessage({ type: "error", text: "Missing Supabase URL configuration" })
         setIsGoogleLoading(false)
         return
+      }
+      
+      // Save return_to info to localStorage so callback can use it
+      if (returnTo) {
+        localStorage.setItem('auth_return_to', returnTo)
       }
       
       // Construct the redirect URL

@@ -34,11 +34,22 @@ function SignInContent() {
   const [validationError, setValidationError] = useState<string | null>(null)
   const { user } = useAuth()
   const searchParams = useSearchParams()
+  const returnTo = searchParams?.get('return_to')
   
   // Check for auth state
   useEffect(() => {
     console.log("Sign-in page - Auth state:", user ? "Logged in" : "Not logged in")
-  }, [user])
+    
+    // If user is authenticated and we have a return_to parameter, redirect
+    if (user && returnTo === 'analysis') {
+      // Use a small timeout to ensure the UI updates before redirect
+      const timer = setTimeout(() => {
+        window.location.href = '/'
+      }, 500)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [user, returnTo])
 
   useEffect(() => {
     // Get error from URL
@@ -151,6 +162,11 @@ function SignInContent() {
         setMessage({ type: "error", text: "Missing Supabase URL configuration" })
         setIsLoading(false)
         return
+      }
+      
+      // Save return_to info to localStorage so callback can use it
+      if (returnTo) {
+        localStorage.setItem('auth_return_to', returnTo)
       }
       
       // Construct the redirect URL
