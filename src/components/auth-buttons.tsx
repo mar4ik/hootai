@@ -130,10 +130,10 @@ export function AuthButtons() {
                 <div className="px-4 py-2 text-sm text-gray-500 border-b truncate">
                   {userEmail}
                 </div>
-                <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                {/* <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
                   <User size={16} />
                   <span>Profile</span>
-                </Link>
+                </Link> */}
                 {/* Fix Profile button - only visible in development */}
                 {isDevelopment && (
                   <button
@@ -179,10 +179,10 @@ export function AuthButtons() {
         {isDropdownOpen && (
           <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg border z-[100] origin-top-right animate-in zoom-in-95 duration-100">
             <div className="py-1">
-              <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+              {/* <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
                 <User size={16} />
                 <span>Profile</span>
-              </Link>
+              </Link> */}
               {/* Fix Profile button - only visible in development */}
               {isDevelopment && (
                 <button
