@@ -131,33 +131,19 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
     <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-5 sm:p-6 md:p-8 my-4 sm:my-6">
       <div className="space-y-6 mb-8">
         <div className="space-y-2">
-          <h1 className="text-[24px] font-bold flex items-center gap-2">
-            <span className="text-xl">🚀</span> Getting started
+          <span className="text-xl mb-8 block">🚀 Getting started</span>
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+         Hoot.ai: Transform Your Product Experience with AI-Powered UX Analysis
           </h1>
-          <h2 className="text-lg font-medium flex items-center gap-2">
-            Unlock UX Insights Instantly with 
-            <Image 
-              src="/owl-favicon.svg" 
-              alt="Hoot.ai Logo" 
-              width={24} 
-              height={24} 
-              className="inline-block" 
-            />
-            Hoot.ai
+          <h2 className="text-lg md:text-xl font-medium flex items-center gap-2">
+            Get Actionable User Journey Insights in Minutes — No Code Required
           </h2>
         </div>
 
         <div className="space-y-4">
-          <p className="text-[14px] text-gray-800">Start optimizing your product experience in minutes.</p>
-          <p className="text-[14px] text-gray-800">
-            Upload a CSV or PDF file with user journey data like page views, click paths, or session logs or simply enter your website URL.
+          <p className="text-[14px] md:text-base text-gray-800">
+            Start optimizing your product experience in minutes. Upload a CSV or PDF file with user journey data like page views, click paths, or session logs or simply enter your website URL. Hoot.ai will analyze user behavior, detect friction points and give you actionable UX insights powered by AI. <br /> <br />No setup. No code. Just clear answers.
           </p>
-          <p className="text-[14px] text-gray-600">
-            Hoot.ai will analyze user behavior, detect friction points and give you actionable UX insights powered by
-            AI.
-          </p>
-
-          <p className="text-[14px] text-gray-800">No setup. No code. Just clear answers.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
@@ -199,7 +185,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 📄 Download CSV
               </a>
               <a href="/downloads/dummy_user_journey_data.pdf" download className="text-indigo-600 hover:text-indigo-800 cursor-pointer mb-1" style={{display: 'block'}}>
-                📑 Download PDF
+                📄 Download PDF
               </a>
             </div>
             <div className="flex items-center">

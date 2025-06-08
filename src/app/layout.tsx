@@ -14,8 +14,9 @@ const istokWeb = Istok_Web({
 })
 
 export const metadata: Metadata = {
-  title: "Hoot.ai - UX/UI Analysis Tool",
-  description: "Unlock UX Insights Instantly with Hoot.ai",
+  title: "Hoot.ai - AI-Powered UX Analysis Tool | Actionable User Journey Insights",
+  description: "Start optimizing your product experience in minutes with Hoot.ai. Upload CSV/PDF files with user journey data or enter your website URL for instant AI-powered UX insights. No code or setup required.",
+  keywords: "UX analysis tool, AI UX insights, user journey optimization, product experience, friction points detection, no-code UX analytics, website usability insights, user behavior analysis, Hoot.ai, actionable UX insights",
   icons: {
     icon: [
       { url: '/owl-favicon.svg', type: 'image/svg+xml' },
