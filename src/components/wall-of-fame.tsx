@@ -36,7 +36,7 @@ export default function WallOfFameContent() {
             <span className="mr-2">🎉</span> Kudos to Angela
           </h2>
           <p className="text-[14px] text-gray-800 leading-relaxed mb-2">
-          A big thank you to Angela Markosyan, the sweethear backend engineering, for helping us with Hoot.ai backend!  <span className="inline-block">🎉</span>
+          A big thank you to Angela Markosyan, the sweetheart of backend engineering, for helping us with Hoot.ai backend!  <span className="inline-block">🎉</span>
           </p>
             <div className="flex flex-wrap items-center gap-x-1">
               <span className="text-[14px] text-gray-800 mr-1">👉 Check</span>
