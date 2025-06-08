@@ -480,8 +480,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear auth success cookie
       document.cookie = "auth_success=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       
-      // Redirect to the sign in page
-      router.push('/auth/sign-in');
+      // Redirect to the main page instead of sign-in
+      router.push('/');
     } catch (err) {
       console.error("Error signing out:", err);
       setError(err instanceof Error ? err.message : "An error occurred during sign out");
