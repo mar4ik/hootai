@@ -137,8 +137,8 @@ export function Sidebar() {
             <span>About Hoot.ai</span>
           </Link>
           <Link
-            href="/wall_of_fame"
-            className={getLinkClassName("/wall_of_fame")}
+            href="/wall-of-fame"
+            className={getLinkClassName("/wall-of-fame")}
             onClick={() => isMobile && setIsOpen(false)}
           >
             <span className="text-xl">❤️</span>
