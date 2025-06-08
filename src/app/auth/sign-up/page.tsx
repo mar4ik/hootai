@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,15 +8,29 @@ import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 
-export default function SignUp() {
+// Component to handle URL params - isolated to ensure proper Suspense boundary
+function ParamsHandler({ onParamsReady }: { 
+  onParamsReady: (returnTo: string | null) => void 
+}) {
+  const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    const returnTo = searchParams?.get('return_to')
+    onParamsReady(returnTo)
+  }, [searchParams, onParamsReady])
+  
+  return null
+}
+
+// Main content component
+function SignUpContent() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   const { signUp, user } = useAuth()
-  const searchParams = useSearchParams()
-  const returnTo = searchParams?.get('return_to')
 
   const validateEmail = (email: string): boolean => {
     // Basic email validation regex
@@ -107,6 +121,11 @@ export default function SignUp() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
+        {/* Handle params with proper Suspense boundary */}
+        <Suspense fallback={null}>
+          <ParamsHandler onParamsReady={setReturnTo} />
+        </Suspense>
+        
         <div className="text-center">
           <h1 className="text-3xl font-bold">Create an account</h1>
           <p className="mt-2 text-sm text-gray-600">
@@ -224,5 +243,14 @@ export default function SignUp() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Main component
+export default function SignUp() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen flex-col items-center justify-center">Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
   )
 } 

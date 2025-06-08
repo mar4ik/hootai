@@ -8,11 +8,18 @@ import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 
-// Create a component to handle URL params
-function ErrorFromParams({ setMessage }: { setMessage: (message: { type: "success" | "error", text: string } | null) => void }) {
+// Component to handle URL params in a single place
+function ParamsHandler({ 
+  setMessage, 
+  onReturnToParam 
+}: { 
+  setMessage: (message: { type: "success" | "error", text: string } | null) => void,
+  onReturnToParam: (returnTo: string | null) => void
+}) {
   const searchParams = useSearchParams()
   
   useEffect(() => {
+    // Handle error param
     const errorParam = searchParams?.get('error')
     if (errorParam) {
       setMessage({ 
@@ -20,7 +27,11 @@ function ErrorFromParams({ setMessage }: { setMessage: (message: { type: "succes
         text: decodeURIComponent(errorParam)
       })
     }
-  }, [searchParams, setMessage])
+    
+    // Handle return_to param
+    const returnTo = searchParams?.get('return_to')
+    onReturnToParam(returnTo)
+  }, [searchParams, setMessage, onReturnToParam])
   
   return null
 }
@@ -32,9 +43,8 @@ function SignInContent() {
   const [isGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   const { user } = useAuth()
-  const searchParams = useSearchParams()
-  const returnTo = searchParams?.get('return_to')
   
   // Check for auth state
   useEffect(() => {
@@ -50,17 +60,6 @@ function SignInContent() {
       return () => clearTimeout(timer)
     }
   }, [user, returnTo])
-
-  useEffect(() => {
-    // Get error from URL
-    const errorParam = searchParams?.get('error')
-    if (errorParam) {
-      setMessage({ 
-        type: "error", 
-        text: decodeURIComponent(errorParam)
-      })
-    }
-  }, [searchParams])
 
   const validateEmail = (email: string): boolean => {
     // Basic email validation regex
@@ -192,9 +191,9 @@ function SignInContent() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        {/* Wrap the error param handler in Suspense */}
+        {/* Wrap the params handler in Suspense */}
         <Suspense fallback={null}>
-          <ErrorFromParams setMessage={setMessage} />
+          <ParamsHandler setMessage={setMessage} onReturnToParam={setReturnTo} />
         </Suspense>
         
         <div className="text-center">

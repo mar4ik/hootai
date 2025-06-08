@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 
-// The main component that uses useSearchParams
-function AuthCallbackContent() {
+// ContentWrapper component that properly handles params
+function ContentWithParams() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
@@ -160,7 +160,7 @@ export default function AuthLoginCallbackPage() {
         </div>
       </div>
     }>
-      <AuthCallbackContent />
+      <ContentWithParams />
     </Suspense>
   )
 } 
