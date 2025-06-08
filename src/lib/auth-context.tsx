@@ -52,8 +52,8 @@ const getSupabaseClient = () => {
   }
 
   // Try to use window environment variables if available (for production fallback)
-  const url = typeof window !== 'undefined' && (window as any).ENV_SUPABASE_URL 
-    ? (window as any).ENV_SUPABASE_URL 
+  const url = typeof window !== 'undefined' && (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
+    ? (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
     : supabaseUrl;
   
   // Fallback URL for production
@@ -62,8 +62,8 @@ const getSupabaseClient = () => {
   // Use fallback if needed
   const effectiveUrl = url || fallbackUrl;
   
-  const key = typeof window !== 'undefined' && (window as any).ENV_SUPABASE_KEY
-    ? (window as any).ENV_SUPABASE_KEY
+  const key = typeof window !== 'undefined' && (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
+    ? (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
     : supabaseAnonKey;
   
   if (!effectiveUrl || !key) {
@@ -110,10 +110,10 @@ export type _User = {
   role?: string
   app_metadata?: {
     provider?: string
-    [key: string]: any
+    [key: string]: unknown
   }
   user_metadata?: {
-    [key: string]: any
+    [key: string]: unknown
   }
   aud?: string
   created_at?: string

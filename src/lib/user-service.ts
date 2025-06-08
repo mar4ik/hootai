@@ -7,8 +7,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // Create a function to get Supabase client with proper config
 const getSupabaseClient = () => {
   // Try to use window environment variables if available (for production fallback)
-  const url = typeof window !== 'undefined' && (window as any).ENV_SUPABASE_URL 
-    ? (window as any).ENV_SUPABASE_URL 
+  const url = typeof window !== 'undefined' && (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
+    ? (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
     : supabaseUrl;
   
   // Fallback URL for production
