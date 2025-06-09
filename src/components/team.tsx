@@ -16,7 +16,7 @@ export default function TeamContent() {
     {
       name: "EunJee Hong",
       role: "Co-Founder",
-      bio: "With a background in business and design, I&apos;ve worked as an architect, product designer, and product manager—launching products from scratch in startup environments. I&apos;m passionate about building intuitive web platforms, mobile apps, and 3D experiences that drive growth and elevate user experience.",
+      bio: "With a background in business and design, I've worked as an architect, product designer, and product manager—launching products from scratch in startup environments. I&apos;m passionate about building intuitive web platforms, mobile apps, and 3D experiences that drive growth and elevate user experience.",
       image: "/images/eunJee.jpeg",
       email: "eunzie@gmail.com",
       linkedin: "https://www.linkedin.com/in/eunjee/",
