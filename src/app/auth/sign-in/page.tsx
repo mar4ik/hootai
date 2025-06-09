@@ -117,7 +117,11 @@ function SignInContent() {
           
           if (!response.ok) {
             const errorData = await response.json()
-            return { error: new Error(errorData.error_description || 'Failed to send magic link') }
+            // Check for rate limit error
+            if (errorData.error_code === 'over_email_send_rate_limit') {
+              return { error: new Error('Too many magic link requests. Please wait a minute before trying again.') }
+            }
+            return { error: new Error(errorData.error_description || errorData.msg || 'Failed to send magic link') }
           }
           
           return { error: null }
