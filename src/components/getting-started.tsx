@@ -178,6 +178,7 @@ export function GettingStarted({ onAnalyze }: GettingStartedProps) {
                 </Button>
               </div>
             </div>
+            <div className="text-[14px] items-center gap-2">👉 Please limit your file to a maximum of 600 rows before uploading it for testing. <br /> Hoot.ai is still in demo testing mode.</div>
             <div className="text-[14px] text-gray-800" style={{marginBottom: '0px'}}>Don&apos;t have a file? Test with dummy data! <br />  Just download one of the files below and upload it to Hoot.ai.</div>
             <div className="text-[14px] text-gray-800">
               <a href="/downloads/dummy_user_journey_data.csv" download className="text-indigo-600 hover:text-indigo-800 cursor-pointer mb-2" style={{display: 'block'}}>
