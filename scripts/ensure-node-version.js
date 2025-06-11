@@ -5,7 +5,7 @@
  * for the Next.js application.
  */
 
-const requiredNodeVersion = '^18.18.0 || ^19.8.0 || >= 20.0.0';
+const requiredNodeVersion = '^18.18.0 || ^19.8.0 || ^20.12.0 || >= 20.0.0';
 const currentNodeVersion = process.version;
 let isCompatible = false;
 
@@ -23,6 +23,11 @@ function checkVersion() {
   
   // Check for Node.js 19.8.0 or higher
   if (current[0] === 19 && (current[1] >= 8)) {
+    return true;
+  }
+  
+  // Check for Node.js 20.12.0 specifically
+  if (current[0] === 20 && current[1] === 12 && current[2] >= 0) {
     return true;
   }
   

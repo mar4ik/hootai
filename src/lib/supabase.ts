@@ -25,7 +25,7 @@ if (typeof window !== 'undefined' && !supabaseUrl && window.ENV_SUPABASE_URL) {
 }
 
 // Detect if we're on a mobile device
-const isMobileDevice = typeof window !== 'undefined' && 
+const _isMobileDevice = typeof window !== 'undefined' && 
   (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
   (window.innerWidth < 768));
 
