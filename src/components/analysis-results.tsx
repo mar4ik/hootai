@@ -23,6 +23,10 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
   const { user } = useAuth()
   const isAuthenticated = !!user
 
+  // Detect if summary is the search engine message
+  const isSearchEngineSummary = result?.summary === "This is a general search engine page, which doesn't have a specific user flow or UI content to analyze."
+  const isEmailInput = result?.summary === "The input appears to be an email address, which is not valid for UX analysis."
+
   const renderSourceInfo = () => {
     if (!analysisData) return null;
     
@@ -117,102 +121,132 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           </div>
         )}
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-red-500" />
-            <h3 className="text-lg font-semibold">User Problem Summary</h3>
-          </div>
-
-          <ul className="space-y-4 pl-5">
-            {/* Show 40% of problems for unauthenticated users */}
-            {isAuthenticated 
-              ? result.problems.map((problem, index) => (
-                <li key={index} className="list-disc list-outside">
-                  <span className="font-semibold">{problem.title}:</span> {problem.description}
-                </li>
-              ))
-              : result.problems.slice(0, Math.ceil(result.problems.length * 0.4)).map((problem, index) => (
-                <li key={index} className="list-disc list-outside">
-                  <span className="font-semibold">{problem.title}:</span> {problem.description}
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📋</span>
-            <h3 className="text-lg font-semibold">Identified UX Issues</h3>
-          </div>
-
-          {/* Show 40% of issues for unauthenticated users */}
-          {isAuthenticated 
-            ? result.issues.map((issue) => (
-              <div key={issue.id} className="space-y-2">
-                <h4 className="flex items-center gap-2 font-medium text-blue-700">
-                  <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
-                </h4>
-
-                <ul className="space-y-4 pl-5">
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Observation:</span> {issue.observation}
-                  </li>
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Impact:</span> {issue.impact}
-                  </li>
-                  {issue.suggestion && (
-                    <li className="list-disc list-outside">
-                      <span className="font-semibold">Suggestion:</span> {issue.suggestion}
-                    </li>
-                  )}
-                  {issue.aptestplan && (
-                    <li className="list-disc list-outside">
-                      <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
-                    </li>
-                  )}
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Priority:</span>{' '}
-                    {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
-                    {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
-                    {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
-                    {issue.priorityList}
-                  </li>
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Estimation:</span> {issue.estimation}
-                  </li>
-                </ul>
+        {/* Only show problems and issues if NOT a search engine summary or email */}
+        {!isSearchEngineSummary && !isEmailInput && (
+          <>
+            {!isAuthenticated && (
+              <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-6">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-indigo-500" />
+                  <p className="text-indigo-800 font-medium">
+                    You&apos;re viewing 40% of the analysis results. Sign up to unlock the full report.
+                  </p>
+                </div>
               </div>
-            ))
-            : result.issues.slice(0, Math.ceil(result.issues.length * 0.4)).map((issue) => (
-              <div key={issue.id} className="space-y-2">
-                <h4 className="flex items-center gap-2 font-medium text-blue-700">
-                  <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
-                </h4>
+            )}
 
-                <ul className="space-y-4 pl-5">
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Observation:</span> {issue.observation}
-                  </li>
-                  <li className="list-disc list-outside">
-                    <span className="font-semibold">Impact:</span> {issue.impact}
-                  </li>
-                  {issue.suggestion && (
-                    <li className="list-disc list-outside">
-                      <span className="font-semibold">Suggestion:</span> {issue.suggestion.substring(0, 100)}
-                      {issue.suggestion.length > 100 ? '...' : ''}
-                    </li>
-                  )}
-                </ul>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-semibold">User Problem Summary</h3>
               </div>
-            ))
-          }
-        </div>
-        
+
+              <ul className="space-y-4 pl-5">
+                {/* Show 40% of problems for unauthenticated users */}
+                {isAuthenticated 
+                  ? result.problems.map((problem, index) => (
+                    <li key={index} className="list-disc list-outside">
+                      <span className="font-semibold">{problem.title}:</span> {problem.description}
+                    </li>
+                  ))
+                  : result.problems.slice(0, Math.ceil(result.problems.length * 0.4)).map((problem, index) => (
+                    <li key={index} className="list-disc list-outside">
+                      <span className="font-semibold">{problem.title}:</span> {problem.description}
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📋</span>
+                <h3 className="text-lg font-semibold">Identified UX Issues</h3>
+              </div>
+
+              {/* Show 40% of issues for unauthenticated users */}
+              {isAuthenticated 
+                ? result.issues.map((issue) => (
+                  <div key={issue.id} className="space-y-2">
+                    <h4 className="flex items-center gap-2 font-medium text-blue-700">
+                      <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
+                    </h4>
+
+                    <ul className="space-y-4 pl-5">
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Observation:</span> {issue.observation}
+                      </li>
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Impact:</span> {issue.impact}
+                      </li>
+                      {issue.suggestion && (
+                        <li className="list-disc list-outside">
+                          <span className="font-semibold">Suggestion:</span> {issue.suggestion}
+                        </li>
+                      )}
+                      {issue.aptestplan && (
+                        <li className="list-disc list-outside">
+                          <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
+                        </li>
+                      )}
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Priority:</span>{' '}
+                        {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
+                        {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
+                        {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
+                        {issue.priorityList}
+                      </li>
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Estimation:</span> {issue.estimation}
+                      </li>
+                    </ul>
+                  </div>
+                ))
+                : result.issues.slice(0, Math.ceil(result.issues.length * 0.4)).map((issue) => (
+                  <div key={issue.id} className="space-y-2">
+                    <h4 className="flex items-center gap-2 font-medium text-blue-700">
+                      <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
+                    </h4>
+
+                    <ul className="space-y-4 pl-5">
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Observation:</span> {issue.observation}
+                      </li>
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Impact:</span> {issue.impact}
+                      </li>
+                      {issue.suggestion && (
+                        <li className="list-disc list-outside">
+                          <span className="font-semibold">Suggestion:</span> {issue.suggestion.substring(0, 100)}...
+                        </li>
+                      )}
+                      {issue.aptestplan && (
+                        <li className="list-disc list-outside">
+                          <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan.substring(0, 100)}...
+                        </li>
+                      )}
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Priority:</span>{' '}
+                        {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
+                        {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
+                        {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
+                        {issue.priorityList}
+                      </li>
+                      <li className="list-disc list-outside">
+                        <span className="font-semibold">Estimation:</span> {issue.estimation}
+                      </li>
+                    </ul>
+                  </div>
+                ))
+              }
+            </div>
+          </>
+        )}
+
         {/* Overlay for unauthenticated users */}
-        {!isAuthenticated && (
+        {!isAuthenticated && !isSearchEngineSummary && !isEmailInput && (
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white pointer-events-none" style={{ top: '50%' }}>
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-white to-transparent p-8 text-center pointer-events-auto">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-b from-white/80 to-white p-8 text-center pointer-events-auto">
               <div className="flex flex-col items-center gap-4">
                 <div className="p-3 bg-indigo-100 rounded-full">
                   <Lock className="h-8 w-8 text-indigo-600" />
@@ -226,7 +260,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
                     </Button>
                   </Link>
                   <Link href="/auth/sign-up?return_to=analysis">
-                    <Button className="px-6 bg-indigo-600 hover:bg-indigo-700">
+                    <Button variant="default" className="px-6 bg-indigo-600 hover:bg-indigo-700">
                       Sign Up
                     </Button>
                   </Link>

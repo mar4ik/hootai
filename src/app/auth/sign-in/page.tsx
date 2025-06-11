@@ -48,8 +48,6 @@ function SignInContent() {
   
   // Check for auth state
   useEffect(() => {
-    console.log("Sign-in page - Auth state:", user ? "Logged in" : "Not logged in")
-    
     // If user is authenticated and we have a return_to parameter, redirect
     if (user && returnTo === 'analysis') {
       // Use a small timeout to ensure the UI updates before redirect
@@ -88,8 +86,6 @@ function SignInContent() {
     setIsLoading(true)
 
     try {
-      console.log("Initiating email sign-in for:", email)
-      
       // Create a wrapper function to handle the passwordless sign-in
       const passwordlessSignIn = async (email: string) => {
         try {
@@ -156,7 +152,6 @@ function SignInContent() {
   const handleGoogleSignIn = () => {
     try {
       setIsLoading(true)
-      console.log("Starting Google OAuth flow with direct redirect...")
       
       // Get required environment variables
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -177,8 +172,6 @@ function SignInContent() {
       
       // Construct Google OAuth URL directly - NO state parameter to avoid mismatch
       const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
-      
-      console.log("Redirecting to:", googleAuthUrl)
       
       // Redirect browser directly to Google auth
       window.location.href = googleAuthUrl

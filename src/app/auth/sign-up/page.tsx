@@ -123,7 +123,6 @@ function SignUpContent() {
   const handleGoogleSignUp = () => {
     try {
       setIsGoogleLoading(true)
-      console.log("Starting Google OAuth flow for sign-up...")
       
       // Get required environment variables
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -144,8 +143,6 @@ function SignUpContent() {
       
       // Construct Google OAuth URL directly
       const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
-      
-      console.log("Redirecting to:", googleAuthUrl)
       
       // Redirect browser directly to Google auth
       window.location.href = googleAuthUrl

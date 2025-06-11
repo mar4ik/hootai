@@ -29,10 +29,6 @@ export const metadata: Metadata = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-// Log environment status in a way that doesn't expose keys
-console.log(`[Root Layout] Supabase URL configured: ${supabaseUrl ? 'Yes' : 'No'}`)
-console.log(`[Root Layout] Supabase key length: ${supabaseAnonKey.length}`)
-
 // Special fallback for development
 const AUTH_FALLBACK_URL = 'https://eaennrqqtlmanbivdhqm.supabase.co';
 
@@ -53,13 +49,8 @@ export default function RootLayout({
                 document.documentElement.classList.add('light');
                 document.documentElement.style.colorScheme = 'light';
                 
-                // Check for environment variables
-                console.log("Environment check from inline script - has SUPABASE_URL:", 
-                  typeof window !== 'undefined' && !!window.ENV_SUPABASE_URL);
-                
                 // Set fallback URL if needed for production
                 if (typeof window !== 'undefined' && !window.ENV_SUPABASE_URL) {
-                  console.log("Setting fallback Supabase URL");
                   window.ENV_SUPABASE_URL = "${AUTH_FALLBACK_URL}";
                 }
               })()
@@ -104,7 +95,6 @@ export default function RootLayout({
                     .replace(/^ +/, "")
                     .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
                 });
-                console.log("Auth state reset");
                 return true;
               } catch(e) {
                 console.error("Failed to reset auth:", e);

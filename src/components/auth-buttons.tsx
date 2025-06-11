@@ -17,18 +17,6 @@ export function AuthButtons() {
   const [isFixing, setIsFixing] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   
-  // Debug auth state
-  useEffect(() => {
-    console.log("Auth buttons - User state:", user ? `Logged in as ${user.email}` : "Not logged in")
-    console.log("Auth buttons - Loading state:", loading)
-    
-    if (typeof window !== 'undefined') {
-      // Check localStorage for session
-      const hasLocalStorage = localStorage.getItem('supabase.auth.token') !== null
-      console.log("LocalStorage has auth token:", hasLocalStorage)
-    }
-  }, [user, loading])
-  
   // Handle window resize
   useEffect(() => {
     // Check if we're on the client side
@@ -101,7 +89,6 @@ export function AuthButtons() {
   if (user || hasAuthCookie) {
     // If we have auth cookie but no user object yet, show loading state
     if (!user && hasAuthCookie) {
-      console.log("Auth cookie found but no user object - showing loading state");
       return (
         <div className="p-2 flex items-center justify-center">
           <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
@@ -214,15 +201,7 @@ export function AuthButtons() {
   if (isMobile) {
     return (
       <div className="grid grid-cols-2 gap-2 p-2">
-        <Link href="/auth/sign-in" className="w-full" onClick={() => {
-          console.log("Auth button clicked - Current state:", user ? "Logged in" : "Not logged in")
-          // Check for existing auth in cookies/localStorage
-          if (typeof window !== 'undefined') {
-            const hasLocalStorage = localStorage.getItem('supabase.auth.token') !== null
-            console.log("LocalStorage has auth token:", hasLocalStorage)
-            console.log("Cookies:", document.cookie)
-          }
-        }}>
+        <Link href="/auth/sign-in" className="w-full">
           <Button 
             variant="ghost" 
             size="sm"
@@ -246,15 +225,7 @@ export function AuthButtons() {
 
   return (
     <div className="flex items-center gap-2 p-1">
-      <Link href="/auth/sign-in" onClick={() => {
-        console.log("Auth button clicked - Current state:", user ? "Logged in" : "Not logged in")
-        // Check for existing auth in cookies/localStorage
-        if (typeof window !== 'undefined') {
-          const hasLocalStorage = localStorage.getItem('supabase.auth.token') !== null
-          console.log("LocalStorage has auth token:", hasLocalStorage)
-          console.log("Cookies:", document.cookie)
-        }
-      }}>
+      <Link href="/auth/sign-in">
         <Button variant="ghost" size="sm">
           Sign In
         </Button>

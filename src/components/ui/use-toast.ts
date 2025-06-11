@@ -9,8 +9,6 @@ interface ToastOptions {
 
 // Mock implementation since we don't have a real toast system
 export function toast(options: ToastOptions) {
-  console.log(`[TOAST] ${options.title}`, options.description || '');
-  
   // If in browser, show an alert for better visibility
   if (typeof window !== 'undefined') {
     // Only show alert in development to avoid annoying users

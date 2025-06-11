@@ -71,8 +71,6 @@ const getSupabaseClient = () => {
     return null;
   }
   
-  console.log(`Creating Supabase client in auth-context with URL: ${effectiveUrl.substring(0, 10)}...`);
-  
   // More robust client creation with better options for production environments
   return createClient(effectiveUrl, key, {
     auth: {
@@ -168,7 +166,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Reinitialize client
   const reinitializeClient = () => {
-    console.log("Reinitializing Supabase client");
     supabase = getSupabaseClient();
     // Reset state
     setError(null);
@@ -236,8 +233,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isClient) return;
     
-    console.log(`Setting up auth state and listeners in AuthProvider (attempt ${initAttempts + 1})`);
-    
     // Clear previous timeout if it exists
     if (sessionCheckTimeoutId) {
       clearTimeout(sessionCheckTimeoutId);
@@ -295,7 +290,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userData);
           
           // Ensure user profile exists with retry
-          console.log("Ensuring user profile exists for:", userData.id);
           try {
             await withRetry(
               () => ensureUserProfile(userData.id),
@@ -330,8 +324,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const { data: { subscription } } = client.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event);
-        
         if (session?.user) {
           // Convert Supabase user to our User type
           const userData: _User = {
@@ -349,7 +341,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Ensure user profile exists on sign-in
           if (event === 'SIGNED_IN') {
-            console.log("User signed in, ensuring profile exists for:", userData.id);
             try {
               await withRetry(
                 () => ensureUserProfile(userData.id),
@@ -363,17 +354,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           setUser(null);
-          
-          // Handle token refresh
-          if (event === 'TOKEN_REFRESHED') {
-            console.log("Token refreshed successfully");
-          }
-          
-          // Handle signed out
-          if (event === 'SIGNED_OUT') {
-            console.log("User signed out");
-            // Don't redirect here - let the signOut function handle that
-          }
         }
       }
     ) || { data: { subscription: null } };
@@ -555,8 +535,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!session) {
         throw new Error("Session refresh failed - no valid session found");
       }
-      
-      console.log("Session refreshed successfully");
     } catch (err) {
       console.error("Error refreshing session:", err);
       setError(err instanceof Error ? err.message : "An error occurred during session refresh");

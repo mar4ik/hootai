@@ -24,8 +24,6 @@ const getSupabaseClient = () => {
     return null;
   }
   
-  console.log(`Creating Supabase client with URL: ${effectiveUrl.substring(0, 10)}...`);
-  
   return createClient(effectiveUrl, key, {
     auth: {
       persistSession: true,
@@ -56,7 +54,6 @@ export async function checkProfileExists(userId: string): Promise<boolean> {
   }
   
   try {
-    console.log(`Checking if profile exists for user: ${userId}`);
     const { error, count } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
@@ -85,7 +82,6 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
   
   try {
-    console.log(`Getting profile for user: ${userId}`);
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -112,11 +108,8 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
   const exists = await checkProfileExists(userId);
   
   if (exists) {
-    console.log('User profile already exists:', userId);
     return getUserProfile(userId);
   }
-  
-  console.log('Creating new user profile for:', userId);
   
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -144,7 +137,6 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
       return null;
     }
     
-    console.log('Profile created successfully:', data[0]);
     return data[0] as UserProfile;
   } catch (err) {
     console.error('Unexpected error creating user profile:', err);
@@ -163,14 +155,10 @@ async function directUpdateProfile(
   if (!supabase) return null;
   
   try {
-    console.log(`Directly updating profile for user: ${userId}`, profile);
-    
     const updateObj = {
       ...profile,
       updated_at: new Date().toISOString()
     };
-    
-    console.log('Update object:', updateObj);
     
     const { data, error } = await supabase
       .from('user_profiles')
@@ -188,7 +176,6 @@ async function directUpdateProfile(
       return null;
     }
     
-    console.log('Direct profile update successful:', data[0]);
     return data[0] as UserProfile;
   } catch (err) {
     console.error('Unexpected error in direct profile update:', err);
@@ -203,8 +190,6 @@ export async function updateUserProfile(
   userId: string,
   profile: Partial<UserProfile>
 ): Promise<UserProfile | null> {
-  console.log(`Starting update profile process for user: ${userId}`, profile);
-  
   const supabase = getSupabaseClient();
   if (!supabase) {
     console.error('Failed to initialize Supabase client');
@@ -215,7 +200,6 @@ export async function updateUserProfile(
   const profileExists = await checkProfileExists(userId);
   
   if (!profileExists) {
-    console.log('Profile does not exist, creating it first');
     const newProfile = await ensureUserProfile(userId);
     if (!newProfile) {
       console.error('Failed to create profile before update');
@@ -229,7 +213,6 @@ export async function updateUserProfile(
   
   while (attempts < maxAttempts) {
     attempts++;
-    console.log(`Update attempt ${attempts}/${maxAttempts}`);
     
     try {
       const result = await directUpdateProfile(supabase, userId, profile);
@@ -237,8 +220,6 @@ export async function updateUserProfile(
       if (result) {
         return result;
       }
-      
-      console.log(`Attempt ${attempts} failed, ${attempts < maxAttempts ? 'retrying...' : 'giving up.'}`);
       
       if (attempts < maxAttempts) {
         // Wait before retrying

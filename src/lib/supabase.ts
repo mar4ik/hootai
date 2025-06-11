@@ -18,14 +18,9 @@ if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseKey)) {
   console.error('Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
 }
 
-// Add debug console logs for configuration
-console.log(`Supabase URL configured: ${supabaseUrl ? 'Yes' : 'No'}`)
-console.log(`Supabase key length: ${supabaseKey.length}`)
-
 // Check for fallback values from window globals (set in layout.tsx)
 let finalSupabaseUrl = supabaseUrl;
 if (typeof window !== 'undefined' && !supabaseUrl && window.ENV_SUPABASE_URL) {
-  console.log("Using fallback Supabase URL from window.ENV_SUPABASE_URL");
   finalSupabaseUrl = window.ENV_SUPABASE_URL;
 }
 
@@ -33,10 +28,6 @@ if (typeof window !== 'undefined' && !supabaseUrl && window.ENV_SUPABASE_URL) {
 const isMobileDevice = typeof window !== 'undefined' && 
   (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
   (window.innerWidth < 768));
-
-if (isMobileDevice) {
-  console.log("Mobile device detected, adjusting auth configuration");
-}
 
 // Type for our database schema
 export type DatabaseSchema = {
