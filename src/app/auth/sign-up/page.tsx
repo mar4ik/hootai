@@ -151,6 +151,11 @@ function SignUpContent() {
         localStorage.setItem('dev_mode', 'true');
         localStorage.setItem('dev_port', window.location.port || '3000');
         
+        // Save return_to info so callback can use it
+        if (returnTo) {
+          localStorage.setItem('auth_return_to', returnTo);
+        }
+        
         // Explicitly use the full callback URL with the origin
         const redirectTo = `${window.location.origin}/auth/login-callback`;
         

@@ -103,6 +103,16 @@ function ContentWithParams() {
                 const isLocalDev = localStorage.getItem('dev_mode') === 'true';
                 const localOrigin = localStorage.getItem('local_origin');
                 
+                // Check if we need to preserve analysis state (used when login from analysis page)
+                const returnTo = localStorage.getItem('auth_return_to');
+                if (returnTo === 'analysis') {
+                  // Set flag to preserve analysis state after redirect
+                  localStorage.setItem('preserve_analysis', 'true');
+                  // Clear the return_to flag
+                  localStorage.removeItem('auth_return_to');
+                  console.log("Setting preserve_analysis flag for returning to analysis");
+                }
+                
                 if (isLocalDev && localOrigin) {
                   // For local development, redirect to local origin
                   console.log("Redirecting to local origin:", localOrigin);

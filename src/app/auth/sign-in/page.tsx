@@ -156,6 +156,11 @@ function SignInContent() {
     try {
       setIsLoading(true)
       
+      // Save return_to info to localStorage so callback can use it
+      if (returnTo) {
+        localStorage.setItem('auth_return_to', returnTo)
+      }
+      
       // Check if we're in a local environment
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
@@ -191,11 +196,6 @@ function SignInContent() {
         setMessage({ type: "error", text: "Missing Supabase URL configuration" })
         setIsLoading(false)
         return
-      }
-      
-      // Save return_to info to localStorage so callback can use it
-      if (returnTo) {
-        localStorage.setItem('auth_return_to', returnTo)
       }
       
       // Construct the redirect URL - always explicitly use full origin

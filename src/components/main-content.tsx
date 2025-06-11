@@ -35,9 +35,11 @@ export function MainContent() {
       if (preserveAnalysis === 'true' && user) {
         // Clear the flag
         localStorage.removeItem('preserve_analysis')
+        console.log("Found preserve_analysis flag, showing analysis results if available")
         
         // Make sure to show analysis results if we have them
         if (analysisData && result) {
+          console.log("Showing preserved analysis results after login")
           setCurrentStep("analysis-results")
         }
       }
