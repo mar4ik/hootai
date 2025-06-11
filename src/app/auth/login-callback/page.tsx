@@ -108,6 +108,8 @@ function ContentWithParams() {
                 if (returnTo === 'analysis') {
                   // Set flag to preserve analysis state after redirect
                   localStorage.setItem('preserve_analysis', 'true');
+                  // Create a timestamp to help with debugging
+                  localStorage.setItem('login_timestamp', Date.now().toString());
                   // Clear the return_to flag
                   localStorage.removeItem('auth_return_to');
                   console.log("Setting preserve_analysis flag for returning to analysis");

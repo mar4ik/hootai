@@ -52,8 +52,12 @@ function SignInContent() {
     if (user && returnTo === 'analysis') {
       // Use a small timeout to ensure the UI updates before redirect
       const timer = setTimeout(() => {
-        // Set the preservation flag
+        // Set the preservation flag for keeping analysis data
         localStorage.setItem('preserve_analysis', 'true')
+        
+        // Create a timestamp to help with debugging
+        localStorage.setItem('login_timestamp', Date.now().toString())
+        
         // Use current origin to stay in the local environment
         window.location.href = window.location.origin + '/'
       }, 500)

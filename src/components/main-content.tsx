@@ -20,6 +20,7 @@ export function MainContent() {
   const reset = useAnalysisStore(state => state.reset)
   const analysisData = useAnalysisStore(state => state.analysisData)
   const result = useAnalysisStore(state => state.result)
+  const startAnalysis = useAnalysisStore(state => state.startAnalysis)
   const { user } = useAuth()
 
   // Check for persisted analysis data on component mount
@@ -37,14 +38,20 @@ export function MainContent() {
         localStorage.removeItem('preserve_analysis')
         console.log("Found preserve_analysis flag, showing analysis results if available")
         
-        // Make sure to show analysis results if we have them
-        if (analysisData && result) {
+        if (analysisData) {
+          // If we have analysis data but no result, re-run the analysis
+          if (!result) {
+            console.log("Re-running analysis after login")
+            startAnalysis()
+          }
+          
+          // Show analysis results even if they're being re-generated
           console.log("Showing preserved analysis results after login")
           setCurrentStep("analysis-results")
         }
       }
     }
-  }, [analysisData, result, user])
+  }, [analysisData, result, user, startAnalysis])
 
   const handleAnalysis = (data: AnalysisData) => {
     setAnalysisData(data)

@@ -37,8 +37,24 @@ export const useAnalysisStore = create<AnalysisState>()(
       isLoading: false,
       error: null,
       
-      // Установка данных для анализа (без запуска анализа)
-      setAnalysisData: (data) => set({ analysisData: data, result: null, error: null }),
+      // Установка данных для анализа (без сброса результатов)
+      setAnalysisData: (data) => {
+        // Only reset results if data is null or different from current data
+        const currentData = get().analysisData;
+        
+        if (data === null) {
+          // If clearing data, clear everything
+          set({ analysisData: null, result: null, error: null });
+        } else if (!currentData || 
+                  currentData.type !== data.type || 
+                  currentData.content !== data.content) {
+          // Only clear result if this is new/different data
+          set({ analysisData: data, result: null, error: null });
+        } else {
+          // Same data, preserve result
+          set({ analysisData: data, error: null });
+        }
+      },
       
       // Запуск анализа
       startAnalysis: async () => {
@@ -84,9 +100,10 @@ export const useAnalysisStore = create<AnalysisState>()(
     {
       name: 'hootai-analysis-storage',  // Storage key
       skipHydration: false,             // Don't skip initial hydration
-      partialize: (state) => ({         // Only persist these fields
+      partialize: (state) => ({         // Persist these fields
         analysisData: state.analysisData,
         result: state.result,
+        isLoading: state.isLoading,     // Also persist loading state
       }),
       storage: {
         // Use localStorage if available, otherwise use a no-op storage

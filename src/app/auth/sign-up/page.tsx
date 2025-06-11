@@ -40,6 +40,10 @@ function SignUpContent() {
       const timer = setTimeout(() => {
         // Set the preservation flag
         localStorage.setItem('preserve_analysis', 'true')
+        
+        // Create a timestamp to help with debugging
+        localStorage.setItem('login_timestamp', Date.now().toString())
+        
         // Use current origin to stay in local environment
         window.location.href = window.location.origin + '/'
       }, 500)
