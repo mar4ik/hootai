@@ -28,6 +28,9 @@ const isLocalStorageAvailable = () => {
   }
 };
 
+// Use a more distinctive name to avoid conflicts with third-party scripts
+const STORAGE_KEY = 'hootai-analysis-storage-v2';
+
 export const useAnalysisStore = create<AnalysisState>()(
   persist(
     (set, get) => ({
@@ -98,12 +101,12 @@ export const useAnalysisStore = create<AnalysisState>()(
       }),
     }),
     {
-      name: 'hootai-analysis-storage',  // Storage key
-      skipHydration: false,             // Don't skip initial hydration
-      partialize: (state) => ({         // Persist these fields
+      name: STORAGE_KEY,              // Use the versioned storage key
+      skipHydration: false,           // Don't skip initial hydration
+      partialize: (state) => ({       // Persist these fields
         analysisData: state.analysisData,
         result: state.result,
-        isLoading: state.isLoading,     // Also persist loading state
+        isLoading: state.isLoading,   // Also persist loading state
       }),
       storage: {
         // Use localStorage if available, otherwise use a no-op storage
@@ -114,7 +117,19 @@ export const useAnalysisStore = create<AnalysisState>()(
         },
         setItem: (name, value) => {
           if (!isLocalStorageAvailable() || typeof window === 'undefined') return
-          localStorage.setItem(name, JSON.stringify(value))
+          
+          // Make sure to actually save the value immediately
+          try {
+            localStorage.setItem(name, JSON.stringify(value))
+            
+            // Verify the data was saved correctly
+            const savedStr = localStorage.getItem(name);
+            if (!savedStr) {
+              console.error('Failed to save analysis data to localStorage');
+            }
+          } catch (e) {
+            console.error('Error saving analysis data to localStorage:', e);
+          }
         },
         removeItem: (name) => {
           if (!isLocalStorageAvailable() || typeof window === 'undefined') return

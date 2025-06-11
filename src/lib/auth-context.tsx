@@ -64,7 +64,13 @@ const getSupabaseClient = () => {
   const fallbackUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
   
   // Use fallback if needed, but only in production
-  const effectiveUrl = isLocalhost ? url : (url || fallbackUrl);
+  let effectiveUrl = isLocalhost ? url : (url || fallbackUrl);
+  
+  // Ensure we have a valid URL
+  if (!effectiveUrl && isLocalhost) {
+    console.warn("Missing Supabase URL for localhost, using fallback URL");
+    effectiveUrl = fallbackUrl;
+  }
   
   const key = typeof window !== 'undefined' && (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
     ? (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
@@ -73,6 +79,11 @@ const getSupabaseClient = () => {
   if (!effectiveUrl || !key) {
     console.error("Cannot create Supabase client: missing credentials");
     return null;
+  }
+  
+  // If in local development, force use the debug flag and log the URL being used
+  if (isLocalhost) {
+    console.log(`Creating Supabase client for localhost using URL: ${effectiveUrl}`);
   }
   
   // More robust client creation with better options for production environments
@@ -477,8 +488,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear user state
       setUser(null);
       
-      // Clear auth success cookie
-      document.cookie = "auth_success=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      // Clear auth success and user_id cookies
+      document.cookie = "auth_success=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
+      document.cookie = "user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
       
       // Redirect to the main page instead of sign-in
       router.push('/');

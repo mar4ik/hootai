@@ -47,34 +47,63 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // If we're on the production site but localStorage indicates we should be on localhost
-                if (window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am') {
-                  // Check for any of our local dev flags
-                  const isLocalDev = localStorage.getItem('force_local_redirect') === 'true' || 
-                                     localStorage.getItem('local_origin') || 
-                                     localStorage.getItem('dev_mode') === 'true';
+                try {
+                  // PREVENT PRODUCTION ACCESS IN DEV MODE
                   
-                  if (isLocalDev) {
-                    // Get local development origin
-                    const port = localStorage.getItem('dev_port') || '3000';
-                    const localOrigin = 'http://localhost:' + port;
+                  // When on localhost, store flags
+                  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.log("🏠 Running on localhost - setting dev flags");
+                    localStorage.setItem('dev_mode', 'true');
+                    localStorage.setItem('dev_port', window.location.port || '3000');
+                    localStorage.setItem('local_origin', window.location.origin);
+                    localStorage.setItem('force_local_redirect', 'true');
+                  }
+                  
+                  // If we're on the production site but in dev mode, redirect back to localhost
+                  if ((window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am') && 
+                      (localStorage.getItem('dev_mode') === 'true' || localStorage.getItem('force_local_redirect') === 'true')) {
                     
-                    // Check if we're in an auth callback with Google parameters
-                    const isGoogleCallback = window.location.search.includes('code=') && 
-                                            window.location.pathname.includes('/auth/');
+                    console.log("🛑 PRODUCTION SITE DETECTED WHEN IN DEV MODE - REDIRECTING TO LOCALHOST");
+                    
+                    // Get local development origin - fallback to port 3000
+                    const port = localStorage.getItem('dev_port') || '3000';
+                    const localOrigin = localStorage.getItem('local_origin') || ('http://localhost:' + port);
+                    
+                    // Check if we're in an auth callback with parameters
+                    const hasAuthParams = window.location.search.includes('code=') || 
+                                         window.location.search.includes('token=') || 
+                                         window.location.search.includes('access_token=') ||
+                                         window.location.hash.includes('access_token=');
                     
                     // Auth callback requires special handling - redirect with all parameters
-                    if (isGoogleCallback) {
-                      console.log('Detected Google auth callback on production - redirecting to localhost');
-                      const redirectUrl = localOrigin + window.location.pathname + 
-                                         window.location.search + window.location.hash;
+                    if (hasAuthParams) {
+                      console.log('🔄 Auth callback detected on production - redirecting to localhost');
+                      
+                      // Build the redirect URL
+                      let redirectPath = window.location.pathname;
+                      if (!redirectPath.includes('/auth/login-callback')) {
+                        // Force redirect to login-callback endpoint
+                        redirectPath = '/auth/login-callback';
+                      }
+                      
+                      const redirectUrl = localOrigin + redirectPath + 
+                                        window.location.search + window.location.hash;
+                      
+                      console.log('🔄 Redirecting to: ' + redirectUrl);
+                      
+                      // Force redirect to localhost without checking for redirect loops
                       window.location.href = redirectUrl;
                     } else {
-                      // Regular page - just redirect to localhost home
-                      console.log('Detected production site when in dev mode - redirecting to localhost');
+                      // Regular page - redirect to localhost home
+                      console.log('🔄 Redirecting to localhost home');
                       window.location.href = localOrigin + '/';
                     }
+                    
+                    // Stop script execution to prevent any further processing
+                    return;
                   }
+                } catch (e) {
+                  console.error('Error in immediate redirect check:', e);
                 }
               })();
             `
@@ -101,12 +130,37 @@ export default function RootLayout({
         <Script id="hotjar" strategy="afterInteractive">
             {`
               (function(h,o,t,j,a,r){
+                // Save any existing analysis data before Hotjar loads
+                const preserveStorageKey = 'hootai-analysis-storage-v2';
+                let savedAnalysisData = null;
+                
+                try {
+                  const analysisDataStr = localStorage.getItem(preserveStorageKey);
+                  if (analysisDataStr) {
+                    savedAnalysisData = analysisDataStr;
+                  }
+                } catch (e) {
+                  console.error('Error preserving analysis data before Hotjar:', e);
+                }
+                
+                // Initialize Hotjar
                 h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
                 h._hjSettings={hjid:6429905,hjsv:6};
                 a=o.getElementsByTagName('head')[0];
                 r=o.createElement('script');r.async=1;
                 r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
                 a.appendChild(r);
+                
+                // Restore analysis data after Hotjar initialization
+                setTimeout(function() {
+                  try {
+                    if (savedAnalysisData) {
+                      localStorage.setItem(preserveStorageKey, savedAnalysisData);
+                    }
+                  } catch (e) {
+                    console.error('Error restoring analysis data after Hotjar:', e);
+                  }
+                }, 500);
               })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
             `}
           </Script>

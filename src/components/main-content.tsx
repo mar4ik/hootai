@@ -34,19 +34,20 @@ export function MainContent() {
     if (typeof window !== 'undefined') {
       const preserveAnalysis = localStorage.getItem('preserve_analysis')
       if (preserveAnalysis === 'true' && user) {
-        // Clear the flag
+        // Clear the flag immediately to prevent duplicate processing
         localStorage.removeItem('preserve_analysis')
-        console.log("Found preserve_analysis flag, showing analysis results if available")
         
+        // Store a marker to indicate we've handled this login
+        localStorage.setItem('login_processed', 'true')
+        
+        // Make sure to show analysis results if we have analysis data
         if (analysisData) {
           // If we have analysis data but no result, re-run the analysis
           if (!result) {
-            console.log("Re-running analysis after login")
             startAnalysis()
           }
           
           // Show analysis results even if they're being re-generated
-          console.log("Showing preserved analysis results after login")
           setCurrentStep("analysis-results")
         }
       }
