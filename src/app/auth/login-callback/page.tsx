@@ -177,16 +177,6 @@ function ContentWithParams() {
             </>
           )}
         </div>
-        
-        {/* Debug link */}
-        <div className="text-center mt-6">
-          <Link 
-            href="/auth/debug-auth" 
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
-            Debug Auth
-          </Link>
-        </div>
       </div>
     </div>
   )

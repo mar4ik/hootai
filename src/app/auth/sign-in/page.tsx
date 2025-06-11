@@ -318,16 +318,6 @@ function SignInContent() {
             <span>Back to Home</span>
           </Link>
         </div>
-        
-        {/* Debug link */}
-        <div className="text-center mt-4">
-          <Link 
-            href="/auth/debug-auth" 
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
-            Debug Auth
-          </Link>
-        </div>
       </div>
     </div>
   )
