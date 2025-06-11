@@ -68,6 +68,8 @@ function ContentWithParams() {
                 if (returnTo === 'analysis') {
                   // Clear the return_to value
                   localStorage.removeItem('auth_return_to')
+                  // Add a flag to indicate this is a post-auth return to analysis
+                  localStorage.setItem('preserve_analysis', 'true')
                   router.push('/')
                 } else {
                   router.push('/')

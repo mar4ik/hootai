@@ -52,6 +52,8 @@ function SignInContent() {
     if (user && returnTo === 'analysis') {
       // Use a small timeout to ensure the UI updates before redirect
       const timer = setTimeout(() => {
+        // Set the preservation flag
+        localStorage.setItem('preserve_analysis', 'true')
         window.location.href = '/'
       }, 500)
       

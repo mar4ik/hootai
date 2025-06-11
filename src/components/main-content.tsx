@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { GettingStarted } from "@/components/getting-started"
 import { AnalysisResults } from "@/components/analysis-results"
 import { useAnalysisStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-context"
 
 type Step = "getting-started" | "analysis-results"
 
@@ -19,6 +20,7 @@ export function MainContent() {
   const reset = useAnalysisStore(state => state.reset)
   const analysisData = useAnalysisStore(state => state.analysisData)
   const result = useAnalysisStore(state => state.result)
+  const { user } = useAuth()
 
   // Check for persisted analysis data on component mount
   useEffect(() => {
@@ -26,7 +28,21 @@ export function MainContent() {
     if (analysisData && result) {
       setCurrentStep("analysis-results")
     }
-  }, [analysisData, result])
+    
+    // Check for post-authentication return flag
+    if (typeof window !== 'undefined') {
+      const preserveAnalysis = localStorage.getItem('preserve_analysis')
+      if (preserveAnalysis === 'true' && user) {
+        // Clear the flag
+        localStorage.removeItem('preserve_analysis')
+        
+        // Make sure to show analysis results if we have them
+        if (analysisData && result) {
+          setCurrentStep("analysis-results")
+        }
+      }
+    }
+  }, [analysisData, result, user])
 
   const handleAnalysis = (data: AnalysisData) => {
     setAnalysisData(data)
