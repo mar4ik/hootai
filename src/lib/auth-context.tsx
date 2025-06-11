@@ -51,16 +51,20 @@ const getSupabaseClient = () => {
     return null;
   }
 
+  // Check if we're in development/localhost environment
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  
   // Try to use window environment variables if available (for production fallback)
   const url = typeof window !== 'undefined' && (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
     ? (window as {ENV_SUPABASE_URL?: string}).ENV_SUPABASE_URL 
     : supabaseUrl;
   
-  // Fallback URL for production
+  // Fallback URL for production only - not for localhost
   const fallbackUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
   
-  // Use fallback if needed
-  const effectiveUrl = url || fallbackUrl;
+  // Use fallback if needed, but only in production
+  const effectiveUrl = isLocalhost ? url : (url || fallbackUrl);
   
   const key = typeof window !== 'undefined' && (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
     ? (window as {ENV_SUPABASE_KEY?: string}).ENV_SUPABASE_KEY
@@ -95,8 +99,24 @@ let supabase: ReturnType<typeof getSupabaseClient> = null;
 
 // Function to get or initialize the client
 const getOrInitClient = () => {
+  // Check if we're in a local environment
+  const isLocalEnvironment = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname === '127.0.0.1');
+  
+  // For localhost, reinitialize the client every time to avoid using cached values
+  if (isLocalEnvironment && supabase) {
+    // Force reinitialize for localhost to avoid any caching issues
+    supabase = null;
+  }
+  
   if (typeof window !== 'undefined' && !supabase) {
     supabase = getSupabaseClient();
+    
+    // For local environment, log the client creation
+    if (isLocalEnvironment) {
+      console.log('Initialized Supabase client for local environment');
+    }
   }
   return supabase;
 };

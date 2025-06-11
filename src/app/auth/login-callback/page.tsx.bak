@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 import Script from "next/script"
@@ -50,15 +50,16 @@ function ImmediateRedirectCheck() {
 
 // ContentWrapper component that properly handles params
 function ContentWithParams() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [countdown, setCountdown] = useState(3)
+  const [countdown, setCountdown] = useState(5)
   
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Create a Supabase client for handling this callback
+        // Create a Supabase client just for handling this callback
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
@@ -74,48 +75,66 @@ function ContentWithParams() {
           }
         })
         
-        // Get parameters from URL
+        // Get hash or code from URL
+        // For Supabase Auth, the session information is in the URL hash (for magic link) 
+        // or search params (for OAuth)
         const code = searchParams?.get('code')
         const accessToken = searchParams?.get('access_token')
         const hash = typeof window !== 'undefined' ? window.location.hash : ''
         
-        // If we have auth parameters, exchange them for a session
+        // If we have any of these, try to exchange them for a session
         if (hash || code || accessToken) {
-          console.log("Found auth params, exchanging for session...")
+          console.log("Found auth params in URL, exchanging for session...")
           
-          // Exchange the token
+          // This will detect and exchange tokens in the URL
           const { error: exchangeError } = await supabase.auth.getSession()
           
           if (exchangeError) {
             throw new Error(`Failed to exchange session: ${exchangeError.message}`)
           }
           
-          // Success - now handle redirect
+          // Set success status
           setStatus("success")
+          
+          // Set a cookie to indicate successful auth (for debugging)
+          document.cookie = `auth_success=true; path=/; max-age=86400`
+          
+          // Check if we have a return_to value in localStorage
+          const returnTo = localStorage.getItem('auth_return_to')
           
           // Start countdown for redirect
           const intervalId = setInterval(() => {
             setCountdown(prev => {
               if (prev <= 1) {
                 clearInterval(intervalId)
-                
                 // Handle redirect based on environment
-                const isLocalDev = localStorage.getItem('dev_mode') === 'true';
+                const isLocalhost = localStorage.getItem('local_origin') !== null;
                 const localOrigin = localStorage.getItem('local_origin');
                 
-                if (isLocalDev && localOrigin) {
-                  // For local development, redirect to local origin
-                  console.log("Redirecting to local origin:", localOrigin);
-                  
-                  // Clear redirect flags
+                // For local development, redirect to the local origin
+                if (isLocalhost && localOrigin) {
+                  console.log("Redirecting to local environment:", localOrigin);
+                  // Clear all localStorage flags except for dev_mode
                   localStorage.removeItem('force_local_redirect');
+                  localStorage.removeItem('local_origin');
                   localStorage.removeItem('redirect_attempted');
+                  localStorage.removeItem('auth_return_to');
                   
-                  // Keep dev_mode flag for future auth attempts
+                  // Keep dev_mode and dev_port for future authentications
+                  // Navigate back to local home
                   window.location.href = `${localOrigin}/`;
                 } else {
                   // Normal production redirect
-                  window.location.href = `${window.location.origin}/`;
+                  if (returnTo === 'analysis') {
+                    // Clear the return_to value
+                    localStorage.removeItem('auth_return_to');
+                    // Add a flag to indicate this is a post-auth return to analysis
+                    localStorage.setItem('preserve_analysis', 'true');
+                    window.location.href = window.location.origin + '/';
+                  } else {
+                    // Regular redirect to home
+                    window.location.href = window.location.origin + '/';
+                  }
                 }
               }
               return prev - 1
@@ -124,7 +143,7 @@ function ContentWithParams() {
           
           return () => clearInterval(intervalId)
         } else {
-          throw new Error("No authentication parameters found in URL")
+          throw new Error("No authentication tokens found in URL")
         }
       } catch (error) {
         console.error("Auth callback error:", error)
@@ -134,7 +153,7 @@ function ContentWithParams() {
     }
     
     handleCallback()
-  }, [searchParams])
+  }, [router, searchParams])
   
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -158,6 +177,14 @@ function ContentWithParams() {
                   Redirecting you in {countdown} seconds...
                 </p>
               </div>
+              <div className="flex justify-center space-x-4">
+                <Link href="/" className="text-blue-600 hover:underline">
+                  Go to home
+                </Link>
+                <Link href="/profile" className="text-blue-600 hover:underline">
+                  Go to profile
+                </Link>
+              </div>
             </>
           )}
           
@@ -172,6 +199,9 @@ function ContentWithParams() {
               <div className="flex justify-center space-x-4">
                 <Link href="/auth/sign-in" className="text-blue-600 hover:underline">
                   Try again
+                </Link>
+                <Link href="/" className="text-blue-600 hover:underline">
+                  Go to home
                 </Link>
               </div>
             </>

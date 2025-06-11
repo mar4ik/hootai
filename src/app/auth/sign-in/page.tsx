@@ -54,7 +54,8 @@ function SignInContent() {
       const timer = setTimeout(() => {
         // Set the preservation flag
         localStorage.setItem('preserve_analysis', 'true')
-        window.location.href = '/'
+        // Use current origin to stay in the local environment
+        window.location.href = window.location.origin + '/'
       }, 500)
       
       return () => clearTimeout(timer)
@@ -155,8 +156,36 @@ function SignInContent() {
     try {
       setIsLoading(true)
       
-      // Get required environment variables
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      // Check if we're in a local environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      // For localhost, we need special handling to prevent redirection to production
+      if (isLocalhost) {
+        // Store the local origin for callback to use
+        localStorage.setItem('force_local_redirect', 'true');
+        localStorage.setItem('local_origin', window.location.origin);
+        localStorage.setItem('dev_mode', 'true');
+        localStorage.setItem('dev_port', window.location.port || '3000');
+        
+        // Explicitly use the full callback URL with the origin
+        const redirectTo = `${window.location.origin}/auth/login-callback`;
+        
+        // Hard-code the production Supabase URL for auth
+        const supabaseAuthUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
+        
+        // Create Google auth URL with specific redirect parameters
+        const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&prompt=consent`;
+        
+        // Log for debugging
+        console.log('Using localhost Google auth URL:', googleAuthUrl);
+        
+        // Redirect browser directly to Google auth
+        window.location.href = googleAuthUrl;
+        return;
+      }
+      
+      // For production, use the regular process
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       
       if (!supabaseUrl) {
         setMessage({ type: "error", text: "Missing Supabase URL configuration" })
@@ -169,10 +198,10 @@ function SignInContent() {
         localStorage.setItem('auth_return_to', returnTo)
       }
       
-      // Construct the redirect URL
+      // Construct the redirect URL - always explicitly use full origin
       const redirectUrl = `${window.location.origin}/auth/login-callback`
       
-      // Construct Google OAuth URL directly - NO state parameter to avoid mismatch
+      // Construct Google OAuth URL directly
       const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
       
       // Redirect browser directly to Google auth
@@ -287,6 +316,16 @@ function SignInContent() {
           <Link href="/" className="text-sm text-gray-600 flex items-center space-x-1 hover:text-gray-800">
             <ArrowLeft size={16} />
             <span>Back to Home</span>
+          </Link>
+        </div>
+        
+        {/* Debug link */}
+        <div className="text-center mt-4">
+          <Link 
+            href="/auth/debug-auth" 
+            className="text-xs text-gray-400 hover:text-gray-600"
+          >
+            Debug Auth
           </Link>
         </div>
       </div>

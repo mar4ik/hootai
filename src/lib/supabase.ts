@@ -13,6 +13,10 @@ declare global {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+// Check if we're in development/localhost environment
+const isLocalhost = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 // Log warning if missing credentials
 if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseKey)) {
   console.error('Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
@@ -21,7 +25,10 @@ if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseKey)) {
 // Check for fallback values from window globals (set in layout.tsx)
 let finalSupabaseUrl = supabaseUrl;
 if (typeof window !== 'undefined' && !supabaseUrl && window.ENV_SUPABASE_URL) {
-  finalSupabaseUrl = window.ENV_SUPABASE_URL;
+  // Only use window globals for non-localhost environments
+  if (!isLocalhost) {
+    finalSupabaseUrl = window.ENV_SUPABASE_URL;
+  }
 }
 
 // Detect if we're on a mobile device

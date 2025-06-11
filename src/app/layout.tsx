@@ -42,6 +42,44 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/owl-favicon.svg" type="image/svg+xml" />
         <link rel="alternate icon" href="/favicon.ico" />
+        {/* Immediate redirect script - will run before anything else */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // If we're on the production site but localStorage indicates we should be on localhost
+                if (window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am') {
+                  // Check for any of our local dev flags
+                  const isLocalDev = localStorage.getItem('force_local_redirect') === 'true' || 
+                                     localStorage.getItem('local_origin') || 
+                                     localStorage.getItem('dev_mode') === 'true';
+                  
+                  if (isLocalDev) {
+                    // Get local development origin
+                    const port = localStorage.getItem('dev_port') || '3000';
+                    const localOrigin = 'http://localhost:' + port;
+                    
+                    // Check if we're in an auth callback with Google parameters
+                    const isGoogleCallback = window.location.search.includes('code=') && 
+                                            window.location.pathname.includes('/auth/');
+                    
+                    // Auth callback requires special handling - redirect with all parameters
+                    if (isGoogleCallback) {
+                      console.log('Detected Google auth callback on production - redirecting to localhost');
+                      const redirectUrl = localOrigin + window.location.pathname + 
+                                         window.location.search + window.location.hash;
+                      window.location.href = redirectUrl;
+                    } else {
+                      // Regular page - just redirect to localhost home
+                      console.log('Detected production site when in dev mode - redirecting to localhost');
+                      window.location.href = localOrigin + '/';
+                    }
+                  }
+                }
+              })();
+            `
+          }}
+        />
         <script 
           dangerouslySetInnerHTML={{
             __html: `
@@ -49,8 +87,10 @@ export default function RootLayout({
                 document.documentElement.classList.add('light');
                 document.documentElement.style.colorScheme = 'light';
                 
-                // Set fallback URL if needed for production
-                if (typeof window !== 'undefined' && !window.ENV_SUPABASE_URL) {
+                // Set fallback URL if needed for production, but not on localhost
+                if (typeof window !== 'undefined' && !window.ENV_SUPABASE_URL && 
+                    window.location.hostname !== 'localhost' && 
+                    window.location.hostname !== '127.0.0.1') {
                   window.ENV_SUPABASE_URL = "${AUTH_FALLBACK_URL}";
                 }
               })()
@@ -82,8 +122,46 @@ export default function RootLayout({
             gtag('js', new Date());
             gtag('config', 'G-1NXXGW8Z77');
             
+            // Development mode flag setup
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalhost) {
+              localStorage.setItem('dev_mode', 'true');
+              localStorage.setItem('dev_port', window.location.port || '3000');
+              
+              // Add an event listener to intercept and log navigations
+              const originalPushState = history.pushState;
+              const originalReplaceState = history.replaceState;
+              
+              history.pushState = function() {
+                console.log('Navigation intercepted:', arguments);
+                // Check if trying to navigate to production
+                const url = arguments[2];
+                if (typeof url === 'string' && (url.includes('hootai.am') || url.includes('www.hootai.am'))) {
+                  console.warn('Prevented navigation to production site:', url);
+                  // Modify the URL to stay on localhost
+                  arguments[2] = url.replace(/https?:\\/\\/(?:www\\.)?hootai\\.am/, window.location.origin);
+                }
+                return originalPushState.apply(this, arguments);
+              };
+              
+              history.replaceState = function() {
+                console.log('Replace state intercepted:', arguments);
+                // Check if trying to navigate to production
+                const url = arguments[2];
+                if (typeof url === 'string' && (url.includes('hootai.am') || url.includes('www.hootai.am'))) {
+                  console.warn('Prevented replace state to production site:', url);
+                  // Modify the URL to stay on localhost
+                  arguments[2] = url.replace(/https?:\\/\\/(?:www\\.)?hootai\\.am/, window.location.origin);
+                }
+                return originalReplaceState.apply(this, arguments);
+              };
+            }
+            
             // Make environment variables available to client-side scripts
-            window.ENV_SUPABASE_URL = "${supabaseUrl || AUTH_FALLBACK_URL}";
+            // Check if we're in development mode
+            const effectiveSupabaseUrl = isLocalhost ? "${supabaseUrl}" : "${supabaseUrl || AUTH_FALLBACK_URL}";
+            
+            window.ENV_SUPABASE_URL = effectiveSupabaseUrl;
             window.ENV_HAS_KEYS = ${Boolean(supabaseUrl && supabaseAnonKey)};
             
             // Production fallback helper function
