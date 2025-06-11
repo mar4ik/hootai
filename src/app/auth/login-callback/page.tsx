@@ -57,7 +57,6 @@ function ContentWithParams() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [countdown, setCountdown] = useState(3)
   
   useEffect(() => {
     const handleCallback = async () => {
@@ -200,7 +199,7 @@ function ContentWithParams() {
               <div className="bg-green-50 p-4 rounded-md mb-4">
                 <p className="text-green-700 font-medium">Successfully signed in!</p>
                 <p className="text-sm text-green-600 mt-2">
-                  Redirecting you in {countdown} seconds...
+                  Redirecting you...
                 </p>
               </div>
             </>

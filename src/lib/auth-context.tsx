@@ -488,9 +488,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear user state
       setUser(null);
       
-      // Clear auth success and user_id cookies
-      document.cookie = "auth_success=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
-      document.cookie = "user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
+      // Clear all authentication-related cookies
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name] = cookie.split('=').map(part => part.trim());
+        if (name.startsWith('sb-') || name.includes('supabase') || name === 'auth_success' || name === 'user_id') {
+          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+        }
+      }
+      
+      // Clear local storage items related to Supabase
+      if (typeof localStorage !== 'undefined') {
+        // Find all Supabase related items
+        const itemsToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('supabase') || key.includes('sb-'))) {
+            itemsToRemove.push(key);
+          }
+        }
+        
+        // Remove them
+        itemsToRemove.forEach(key => {
+          localStorage.removeItem(key);
+        });
+      }
+      
+      // Also clear session storage
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
       
       // Redirect to the main page instead of sign-in
       router.push('/');
