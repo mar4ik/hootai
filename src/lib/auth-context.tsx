@@ -497,13 +497,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      // Clear local storage items related to Supabase
+      // Clear local storage items related to Supabase, but preserve analysis data
       if (typeof localStorage !== 'undefined') {
         // Find all Supabase related items
         const itemsToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && (key.includes('supabase') || key.includes('sb-'))) {
+          // Skip the analysis storage key to preserve user analysis data
+          if (key && (key.includes('supabase') || key.includes('sb-')) && !key.includes('hootai-analysis-storage')) {
             itemsToRemove.push(key);
           }
         }
@@ -514,9 +515,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       
-      // Also clear session storage
+      // Clear session storage items related to authentication
       if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.clear();
+        // Find all auth-related items
+        const sessionItemsToRemove: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (key.includes('supabase') || key.includes('sb-') || key.includes('auth'))) {
+            sessionItemsToRemove.push(key);
+          }
+        }
+        
+        // Remove them
+        sessionItemsToRemove.forEach(key => {
+          sessionStorage.removeItem(key);
+        });
       }
       
       // Redirect to the main page instead of sign-in
