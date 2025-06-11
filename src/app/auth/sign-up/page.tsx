@@ -138,7 +138,7 @@ function SignUpContent() {
 
   const handleGoogleSignUp = () => {
     try {
-      setIsLoading(true)
+      setIsGoogleLoading(true)
       
       // Check if we're in a local environment
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -173,7 +173,7 @@ function SignUpContent() {
       
       if (!supabaseUrl) {
         setMessage({ type: "error", text: "Missing Supabase URL configuration" })
-        setIsLoading(false)
+        setIsGoogleLoading(false)
         return
       }
       
@@ -196,7 +196,7 @@ function SignUpContent() {
         type: "error", 
         text: err instanceof Error ? err.message : "An unknown error occurred"
       })
-      setIsLoading(false)
+      setIsGoogleLoading(false)
     }
   }
 
