@@ -186,7 +186,7 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
     try {
       const object = JSON.parse(content)
       return AnalysisResultSchema.parse(object)
-    } catch (parseError) {
+    } catch (_parseError) {
       console.error('Failed to parse response:', content)
       throw new Error('Invalid response format from AI')
     }

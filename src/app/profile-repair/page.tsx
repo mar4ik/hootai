@@ -51,7 +51,7 @@ export default function ProfileRepairPage() {
         addLog("WARNING: Missing Supabase credentials in environment variables")
         
         // Try window globals if available
-        if (typeof window !== 'undefined' && (window as any).ENV_SUPABASE_URL) {
+        if (typeof window !== 'undefined' && (window as { ENV_SUPABASE_URL?: string }).ENV_SUPABASE_URL) {
           addLog("Found fallback URL in window.ENV_SUPABASE_URL")
         } else {
           addLog("Using hardcoded fallback URL")
