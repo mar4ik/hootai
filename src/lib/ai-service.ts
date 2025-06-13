@@ -163,7 +163,7 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       messages: [
         {
           role: "system",
-          content: "You are a UX Data Analyst and UI Expert. You must respond with valid JSON only."
+          content: "You are a UX Data Analyst and UI Expert. You must respond with valid JSON only that matches the exact structure provided."
         },
         {
           role: "user",
@@ -184,11 +184,21 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
     }
 
     try {
+      // Try to parse the response as JSON
       const object = JSON.parse(content)
-      return AnalysisResultSchema.parse(object)
-    } catch (_parseError) {
+      
+      // Validate against the schema
+      try {
+        return AnalysisResultSchema.parse(object)
+      } catch (schemaError) {
+        console.error('Schema validation error:', schemaError)
+        console.error('Invalid response structure:', content)
+        throw new Error('AI response did not match expected format')
+      }
+    } catch (parseError) {
       console.error('Failed to parse response:', content)
-      throw new Error('Invalid response format from AI')
+      console.error('Parse error:', parseError)
+      throw new Error('AI response was not valid JSON')
     }
   } catch (error) {
     console.error('Error analyzing content:', error)
@@ -196,7 +206,7 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       summary: 'Analysis failed. Please try again.',
       problems: [{
         title: 'Analysis Error',
-        description: 'We encountered an error while analyzing your content.',
+        description: error instanceof Error ? error.message : 'We encountered an error while analyzing your content.',
         error: ['error'],
       }],
       issues: []
