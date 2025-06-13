@@ -1,7 +1,13 @@
-import { generateObject } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { AzureOpenAI } from 'openai'
 import { AnalysisData } from '@/components/main-content'
 import { z } from 'zod'
+
+// Initialize Azure OpenAI client
+const azureOpenAI = new AzureOpenAI({
+  apiKey: process.env.AZURE_OPENAI_API_KEY,
+  endpoint: "https://hoot-ai.openai.azure.com/",
+  apiVersion: "2024-12-01-preview"
+})
 
 // Define Zod schema for type safety
 const AnalysisResultSchema = z.object({
@@ -56,9 +62,37 @@ function isSearchEngine(url: string): boolean {
 
 const UX_ANALYSIS_PROMPT = `You are a UX Data Analyst and UI Expert. The user will either provide a website link or a CSV/PDF file containing website analytics.
 
+IMPORTANT: You must respond with a valid JSON object that matches this exact structure:
+{
+  "summary": "string",
+  "problems": [
+    {
+      "title": "string",
+      "description": "string",
+      "error": ["string"]
+    }
+  ],
+  "issues": [
+    {
+      "id": number,
+      "title": "string",
+      "observation": "string",
+      "impact": "string",
+      "suggestion": "string",
+      "estimation": "string",
+      "aptestplan": "string",
+      "priorityList": "string"
+    }
+  ]
+}
+
 🚫 Skip Condition (Search Engine Pages):
 If the provided link is to a general-purpose search engine or search engine results page (e.g., www.google.com, www.bing.com, www.yahoo.com, www.duckduckgo.com, etc.), do not perform any analysis. Simply respond with:
-"This is a general search engine page, which doesn't have a specific user flow or UI content to analyze."
+{
+  "summary": "This is a general search engine page, which doesn't have a specific user flow or UI content to analyze.",
+  "problems": [],
+  "issues": []
+}
 
 📊 File Input (CSV or PDF):
 If the user uploads a CSV or PDF file, assume it contains website user analytics. In that case:
@@ -124,15 +158,38 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       }
     }
 
-    const { object } = await generateObject({
-      model: openai('gpt-4o'),
-      prompt: analysisPrompt,
-      schema: AnalysisResultSchema,
-      temperature: 0.2,
-      maxTokens: 2000,
+    const response = await azureOpenAI.chat.completions.create({
+      model: "gpt-4.1",
+      messages: [
+        {
+          role: "system",
+          content: "You are a UX Data Analyst and UI Expert. You must respond with valid JSON only."
+        },
+        {
+          role: "user",
+          content: analysisPrompt
+        }
+      ],
+      max_tokens: 800,
+      temperature: 1.0,
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+      response_format: { type: "json_object" }
     })
 
-    return object
+    const content = response.choices[0]?.message?.content
+    if (!content) {
+      throw new Error('No response from Azure OpenAI')
+    }
+
+    try {
+      const object = JSON.parse(content)
+      return AnalysisResultSchema.parse(object)
+    } catch (parseError) {
+      console.error('Failed to parse response:', content)
+      throw new Error('Invalid response format from AI')
+    }
   } catch (error) {
     console.error('Error analyzing content:', error)
     return {

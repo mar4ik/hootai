@@ -11,7 +11,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ```bash
 # OpenAI API Key - required for AI analysis
-OPENAI_API_KEY=your_openai_api_key_here
+AZURE_OPENAI_API_KEY=your_openai_api_key_here
 
 # Supabase Configuration - required for authentication
 NEXT_PUBLIC_SUPABASE_URL=https://eaennrqqtlmanbivdhqm.supabase.co
