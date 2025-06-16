@@ -28,6 +28,13 @@ function ImmediateRedirectCheck() {
                 force_local_redirect: localStorage.getItem('force_local_redirect')
               });
               
+              // Special case: Check if we're on the Supabase auth callback page
+              const isSupabaseCallback = window.location.href.includes('eaennrqqtlmanbivdhqm.supabase.co/auth/v1/callback');
+              if (isSupabaseCallback) {
+                console.log("⚠️ Detected Supabase callback URL - will let it complete the auth flow");
+                return; // Allow Supabase to complete its auth flow
+              }
+              
               // Check if this is a callback on the production site but we should be on localhost
               const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
               const isDevMode = localStorage.getItem('dev_mode') === 'true';

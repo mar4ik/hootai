@@ -53,6 +53,13 @@ export default function RootLayout({
                   console.log("🔍 Current location:", window.location.href);
                   console.log("🔍 Current hostname:", window.location.hostname);
                   
+                  // Special case: Check if we're on the Supabase auth callback page
+                  const isSupabaseCallback = window.location.href.includes('eaennrqqtlmanbivdhqm.supabase.co/auth/v1/callback');
+                  if (isSupabaseCallback) {
+                    console.log("⚠️ Detected Supabase callback URL - will let it complete the auth flow");
+                    return; // Allow Supabase to complete its auth flow
+                  }
+                  
                   // When on localhost, store flags
                   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                     console.log("🏠 Running on localhost - setting dev flags");
