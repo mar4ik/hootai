@@ -8,7 +8,7 @@ interface FeedbackData {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as FeedbackData
-    const { score, comment } = body
+    const { score, comment: _comment } = body
     
     if (typeof score !== 'number' || score < 0 || score > 10) {
       return NextResponse.json(
@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Map the score to a sentiment
-    let sentiment = 'neutral'
-    if (score >= 9) sentiment = 'positive'
-    else if (score <= 5) sentiment = 'negative'
+    let _sentiment = 'neutral'
+    if (score >= 9) _sentiment = 'positive'
+    else if (score <= 5) _sentiment = 'negative'
 
     // TODO: In the future, store this in Supabase
     // const { data, error } = await supabase

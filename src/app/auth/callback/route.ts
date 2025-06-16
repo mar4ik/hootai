@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,11 +65,16 @@ export async function GET(request: NextRequest) {
           }
           
           // Get provider from session
-          const provider = exchangeData.session.user?.app_metadata?.provider || 'unknown'
+          const _provider = exchangeData.session.user?.app_metadata?.provider || 'unknown'
+          
+          // Determine site URL for redirect
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
+          
+          // Create response with redirect
+          const response = NextResponse.redirect(siteUrl)
           
           // Set cookies for server-side auth
-          const cookieStore = cookies()
-          cookieStore.set('sb-access-token', exchangeData.session.access_token, { 
+          response.cookies.set('sb-access-token', exchangeData.session.access_token, { 
             path: '/',
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
           })
           
           // Set user ID cookie for convenience
-          cookieStore.set('user_id', exchangeData.session.user.id, {
+          response.cookies.set('user_id', exchangeData.session.user.id, {
             path: '/',
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -86,18 +90,15 @@ export async function GET(request: NextRequest) {
           })
           
           // Set auth success flag
-          cookieStore.set('auth_success', 'true', {
+          response.cookies.set('auth_success', 'true', {
             path: '/',
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: 60 * 60 * 24 // 1 day
           })
           
-          // Determine site URL for redirect
-          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
-          
-          // Redirect to home page
-          return NextResponse.redirect(siteUrl)
+          // Return the response with cookies
+          return response
         } catch (exchangeErr) {
           console.error("Error during code exchange:", exchangeErr)
           return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('Authentication failed')}`)
@@ -114,9 +115,14 @@ export async function GET(request: NextRequest) {
       
       // If we have a session directly, use it
       if (data.session) {
+        // Determine site URL for redirect
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
+        
+        // Create response with redirect
+        const response = NextResponse.redirect(siteUrl)
+        
         // Set cookies for server-side auth
-        const cookieStore = cookies()
-        cookieStore.set('sb-access-token', data.session.access_token, { 
+        response.cookies.set('sb-access-token', data.session.access_token, { 
           path: '/',
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
@@ -124,7 +130,7 @@ export async function GET(request: NextRequest) {
         })
         
         // Set user ID cookie for convenience
-        cookieStore.set('user_id', data.session.user.id, {
+        response.cookies.set('user_id', data.session.user.id, {
           path: '/',
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
@@ -132,18 +138,15 @@ export async function GET(request: NextRequest) {
         })
         
         // Set auth success flag
-        cookieStore.set('auth_success', 'true', {
+        response.cookies.set('auth_success', 'true', {
           path: '/',
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 // 1 day
         })
         
-        // Determine site URL for redirect
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
-        
-        // Redirect to home page
-        return NextResponse.redirect(siteUrl)
+        // Return the response with cookies
+        return response
       }
     } catch (error) {
       console.error("Unexpected error processing session:", error)

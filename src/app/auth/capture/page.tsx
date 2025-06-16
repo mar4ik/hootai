@@ -3,7 +3,6 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { isDevelopment, getSiteUrl } from '@/lib/env-config';
 
 // Main content component with useSearchParams
 function AuthCaptureContent() {

@@ -169,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<_User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const [_isClient, setIsClient] = useState(false);
   const authListenerRef = useRef<{ data?: { subscription?: any } }>(null);
 
   // Reinitialize client

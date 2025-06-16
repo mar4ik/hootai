@@ -40,7 +40,7 @@ export default function WhatIsNextContent() {
     
     try {
       // Send email using EmailJS with form element directly
-      const result = await emailjs.sendForm(
+      const _result = await emailjs.sendForm(
         'service_kyq6yqw', // Service ID
         'template_gcnhhe7', // Template ID
         formRef.current

@@ -25,7 +25,7 @@ if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
 
 // CRITICAL: Always use the environment-specific Supabase URL
 // For localhost, ensure we're using the URL from .env.local
-let finalSupabaseUrl = supabaseUrl;
+const finalSupabaseUrl = supabaseUrl;
 
 // Detect if we're on a mobile device
 const _isMobileDevice = typeof window !== 'undefined' && 

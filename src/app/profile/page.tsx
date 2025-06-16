@@ -11,8 +11,6 @@ import { getUserProfile, updateUserProfile, UserProfile, ensureUserProfile, chec
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
-import { PageLayout } from "@/components/page-layout"
-import { Skeleton } from "@/components/ui/skeleton"
 
 // Check if we're in development mode
 const _isDevelopment = process.env.NODE_ENV === 'development';
@@ -20,7 +18,7 @@ const _isDevelopment = process.env.NODE_ENV === 'development';
 const isBrowser = typeof window !== 'undefined';
 
 // Check for auth cookies to help debug
-const hasAuthCookie = isBrowser && document.cookie.split(';').some(c => 
+const _hasAuthCookie = isBrowser && document.cookie.split(';').some(c => 
   c.trim().startsWith('auth_success=') || 
   c.trim().includes('sb-') || 
   c.trim().startsWith('user_id='));
@@ -36,7 +34,7 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isFixing, setIsFixing] = useState(false)
   const [loadingTimeout, setLoadingTimeout] = useState(false)
-  const [saveAttempts, setSaveAttempts] = useState(0)
+  const [_saveAttempts, setSaveAttempts] = useState(0)
   const [profileLoaded, setProfileLoaded] = useState(false)
 
   // Set up a timeout for loading state
@@ -63,10 +61,10 @@ export default function ProfilePage() {
     
     try {
       // First check if profile exists
-      const exists = await checkProfileExists(user.id);
+      const _exists = await checkProfileExists(user.id);
       
       // Always try to ensure profile exists regardless of check result
-      const profile = await ensureUserProfile(user.id)
+      const _profile = await ensureUserProfile(user.id)
       
       // Wait a moment for database to update
       await new Promise(resolve => setTimeout(resolve, 1500))
@@ -126,7 +124,7 @@ export default function ProfilePage() {
       if (user) {
         try {
           // For production reliability, always ensure the profile exists first
-          const profile = await ensureUserProfile(user.id)
+          const _profile = await ensureUserProfile(user.id)
           
           // Wait a moment for database to update
           await new Promise(resolve => setTimeout(resolve, 1500))
@@ -236,10 +234,7 @@ export default function ProfilePage() {
           
           if (!profileExists) {
             // Create profile if it doesn't exist
-            const createResult = await ensureUserProfile(user.id, {
-              display_name: displayName,
-              bio: bio
-            });
+            const _createResult = await ensureUserProfile(user.id);
           }
           
           // Update the profile
@@ -265,10 +260,7 @@ export default function ProfilePage() {
             console.error("Profile update returned null")
             
             // Try a fallback approach - direct profile creation
-            const directResult = await ensureUserProfile(user.id, {
-              display_name: displayName,
-              bio: bio
-            });
+            const directResult = await ensureUserProfile(user.id);
             
             if (directResult) {
               // Try direct update one more time

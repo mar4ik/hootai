@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { getAuthCallbackUrl, storeEnvironmentInfo, SUPABASE_CONFIG } from "@/lib/env-config"
+import { storeEnvironmentInfo } from "@/lib/env-config"
 import { createClient } from "@supabase/supabase-js"
 
 // Component to handle URL params - isolated to ensure proper Suspense boundary
@@ -174,7 +174,7 @@ function SignInContent() {
           text: "✅ Link sent successfully! Check your email." 
         })
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ 
         type: "error", 
         text: "An unexpected error occurred. Please try again." 
