@@ -3,10 +3,11 @@
 import { MainContent } from "@/components/main-content"
 import { PageLayout } from "@/components/page-layout"
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 export default function Home() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   
   // Track if this is the first load
@@ -22,6 +23,18 @@ export default function Home() {
     // Reset the scroll position when the path changes
     window.scrollTo(0, 0)
   }, [pathname])
+  
+  // Remove hash fragment from URL if present
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      // Use history API to replace the URL without the hash
+      window.history.replaceState(
+        {}, 
+        document.title, 
+        window.location.pathname + window.location.search
+      )
+    }
+  }, [])
 
   return (
     <PageLayout>

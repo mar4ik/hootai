@@ -6,6 +6,7 @@ import { useAnalysisStore } from "@/lib/store"
 import { useAuth } from "@/lib/auth-context"
 import React from "react"
 import Link from "next/link"
+import { FeedbackPrompt } from "./FeedbackPrompt"
 
 interface AnalysisResultsProps {
   onStartOver: () => void
@@ -23,7 +24,8 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
   const { user } = useAuth()
   const isAuthenticated = !!user
 
-
+  // Determine if we should show feedback prompt
+  const showFeedbackPrompt = !!(isAuthenticated && result && !isLoading && !error)
 
   // Detect if summary is the search engine message
   const isSearchEngineSummary = result?.summary === "This is a general search engine page, which doesn't have a specific user flow or UI content to analyze."
@@ -242,6 +244,9 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
           </div>
         )}
       </div>
+
+      {/* NPS Feedback Prompt */}
+      <FeedbackPrompt show={showFeedbackPrompt} />
     </div>
   )
 }

@@ -93,14 +93,13 @@ export default function RootLayout({
                       
                       // Force redirect to localhost without checking for redirect loops
                       window.location.href = redirectUrl;
+                      return; // Stop execution to prevent any further processing
                     } else {
                       // Regular page - redirect to localhost home
                       console.log('🔄 Redirecting to localhost home');
                       window.location.href = localOrigin + '/';
+                      return; // Stop execution to prevent any further processing
                     }
-                    
-                    // Stop script execution to prevent any further processing
-                    return;
                   }
                 } catch (e) {
                   console.error('Error in immediate redirect check:', e);
