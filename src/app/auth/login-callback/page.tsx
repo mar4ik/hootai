@@ -6,8 +6,13 @@ import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 import Script from "next/script"
 
+// Add server-side logging
+console.log("🔍 SERVER: Auth login-callback page module loaded");
+
 // Immediate redirect component that injects a script running before React hydration
 function ImmediateRedirectCheck() {
+  console.log("🔍 SERVER: ImmediateRedirectCheck component rendering");
+  
   return (
     <Script 
       id="immediate-redirect-check"
@@ -21,6 +26,7 @@ function ImmediateRedirectCheck() {
               
               console.log("🔍 DEBUG - ImmediateRedirectCheck running");
               console.log("🔍 Current hostname:", window.location.hostname);
+              console.log("🔍 Current URL:", window.location.href);
               console.log("🔍 localStorage values:", {
                 dev_mode: localStorage.getItem('dev_mode'),
                 local_origin: localStorage.getItem('local_origin'),
@@ -72,17 +78,22 @@ function ImmediateRedirectCheck() {
 
 // ContentWrapper component that properly handles params
 function ContentWithParams() {
+  console.log("🔍 SERVER: ContentWithParams component rendering");
+  
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   
   useEffect(() => {
+    console.log("🔍 SERVER: ContentWithParams useEffect running");
+    
     const handleCallback = async () => {
       try {
         // CRITICAL CHECK: If we're on production but should be on localhost, redirect immediately
         if (typeof window !== 'undefined') {
           console.log("🔍 DEBUG - ContentWithParams useEffect running");
           console.log("🔍 Current hostname:", window.location.hostname);
+          console.log("🔍 Current URL:", window.location.href);
           console.log("🔍 localStorage values:", {
             dev_mode: localStorage.getItem('dev_mode'),
             local_origin: localStorage.getItem('local_origin'),
@@ -279,6 +290,8 @@ function ContentWithParams() {
 
 // Wrapper component with Suspense
 export default function AuthLoginCallbackPage() {
+  console.log("🔍 SERVER: AuthLoginCallbackPage component rendering");
+  
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center p-4">

@@ -8,6 +8,9 @@ import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 
+// Add server-side logging
+console.log("🔍 SERVER: Auth sign-in page module loaded");
+
 // Component to handle URL params in a single place
 function ParamsHandler({ 
   setMessage, 
@@ -38,28 +41,30 @@ function ParamsHandler({
 
 // Main sign-in component
 function SignInContent() {
+  console.log("🔍 SERVER: SignInContent component rendering");
+  
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [returnTo, setReturnTo] = useState<string | null>(null)
+  const [urlError, setUrlError] = useState<string | null>(null)
   const { user } = useAuth()
   
+  // Handle params from URL
+  const handleParamsReady = (returnTo: string | null, error: string | null) => {
+    if (returnTo) setReturnTo(returnTo)
+    if (error) setUrlError(error)
+  }
+
   // Check for auth state
   useEffect(() => {
     // If user is authenticated and we have a return_to parameter, redirect
     if (user && returnTo === 'analysis') {
       // Use a small timeout to ensure the UI updates before redirect
       const timer = setTimeout(() => {
-        // Set the preservation flag for keeping analysis data
-        localStorage.setItem('preserve_analysis', 'true')
-        
-        // Create a timestamp to help with debugging
-        localStorage.setItem('login_timestamp', Date.now().toString())
-        
-        // Use current origin to stay in the local environment
-        window.location.href = window.location.origin + '/'
+        handleRedirectAfterAuth(user.id)
       }, 500)
       
       return () => clearTimeout(timer)
@@ -187,6 +192,7 @@ function SignInContent() {
       // Check if we're in a local environment
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       console.log("🔍 handleGoogleSignIn - isLocalhost:", isLocalhost);
+      console.log("🔍 Current URL:", window.location.href);
       
       // For localhost, we need special handling to prevent redirection to production
       if (isLocalhost) {
@@ -224,7 +230,11 @@ function SignInContent() {
         
         // Redirect browser directly to Google auth
         console.log('🔄 Redirecting to Google auth URL...');
-        window.location.href = googleAuthUrl;
+        
+        // Delay the redirect slightly to ensure console logs are visible
+        setTimeout(() => {
+          window.location.href = googleAuthUrl;
+        }, 500);
         return;
       }
       
