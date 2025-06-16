@@ -21,13 +21,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await analyzeContent({ type, content, fileName })
-    return NextResponse.json(result)
+    try {
+      const result = await analyzeContent({ type, content, fileName })
+      
+      // Ensure we're returning a properly formatted result
+      if (typeof result === 'string') {
+        // If result is a string (which shouldn't happen), try to parse it
+        try {
+          const parsedResult = JSON.parse(result);
+          return NextResponse.json(parsedResult);
+        } catch (_e) {
+          // If parsing fails, wrap it in a proper structure
+          return NextResponse.json({
+            summary: result,
+            problems: [],
+            issues: []
+          });
+        }
+      }
+      
+      // Validate the result structure before returning
+      const validatedResult = {
+        summary: result.summary || "Analysis completed successfully.",
+        problems: Array.isArray(result.problems) ? result.problems : [],
+        issues: Array.isArray(result.issues) ? result.issues : []
+      };
+      
+      return NextResponse.json(validatedResult)
+    } catch (analysisError) {
+
+      return NextResponse.json(
+        { 
+          summary: 'Analysis failed. Please try again.',
+          problems: [{
+            title: 'Analysis Error',
+            description: analysisError instanceof Error ? analysisError.message : 'We encountered an error while analyzing your content.',
+            error: ['error'],
+          }],
+          issues: []
+        },
+        { status: 200 } // Return 200 with error content for better UX
+      )
+    }
   } catch (error) {
-    console.error('API route error:', error)
+
     return NextResponse.json(
-      { error: 'Failed to analyze content' },
-      { status: 500 }
+      { 
+        summary: 'Analysis request failed. Please try again.',
+        problems: [{
+          title: 'Request Error',
+          description: error instanceof Error ? error.message : 'Failed to process analysis request',
+          error: ['error'],
+        }],
+        issues: []
+      },
+      { status: 200 } // Return 200 with error content for better UX
     )
   }
 } 

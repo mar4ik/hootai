@@ -1,13 +1,6 @@
-import { AzureOpenAI } from 'openai'
+import axios from "axios";
 import { AnalysisData } from '@/components/main-content'
 import { z } from 'zod'
-
-// Initialize Azure OpenAI client
-const azureOpenAI = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: "https://hoot-ai.openai.azure.com/",
-  apiVersion: "2024-12-01-preview"
-})
 
 // Define Zod schema for type safety
 const AnalysisResultSchema = z.object({
@@ -62,7 +55,7 @@ function isSearchEngine(url: string): boolean {
 
 const UX_ANALYSIS_PROMPT = `You are a UX Data Analyst and UI Expert. The user will either provide a website link or a CSV/PDF file containing website analytics.
 
-IMPORTANT: You must respond with a valid JSON object that matches this exact structure:
+IMPORTANT: You must respond with ONLY a valid JSON object that matches this exact structure, with no additional text before or after:
 {
   "summary": "string",
   "problems": [
@@ -85,6 +78,8 @@ IMPORTANT: You must respond with a valid JSON object that matches this exact str
     }
   ]
 }
+
+DO NOT include any explanatory text, markdown formatting, or code blocks around the JSON. Return ONLY the raw JSON object.
 
 🚫 Skip Condition (Search Engine Pages):
 If the provided link is to a general-purpose search engine or search engine results page (e.g., www.google.com, www.bing.com, www.yahoo.com, www.duckduckgo.com, etc.), do not perform any analysis. Simply respond with:
@@ -113,6 +108,13 @@ If the user provides a valid website (that is not a search engine):
 6. Propose an A/B test plan for each improvement: include a hypothesis, what to test, and how to measure success.
 
 Note: Do not analyze raw HTML or hidden elements. Focus only on visible, user-facing content. Begin your analysis only after the page is fully loaded.`
+
+const AZURE_GROK_RESOURCE = process.env.AZURE_GROK_RESOURCE;
+const AZURE_GROK_DEPLOYMENT = process.env.AZURE_GROK_DEPLOYMENT;
+const AZURE_OPENAI_API_KEY = process.env.AZURE_OPENAI_API_KEY;
+const AZURE_OPENAI_API_VERSION = process.env.AZURE_OPENAI_API_VERSION;
+
+const AZURE_GROK_ENDPOINT = `https://${AZURE_GROK_RESOURCE}.openai.azure.com/openai/deployments/${AZURE_GROK_DEPLOYMENT}/chat/completions?api-version=${AZURE_OPENAI_API_VERSION}`;
 
 export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult> {
   try {
@@ -158,50 +160,130 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
       }
     }
 
-    const response = await azureOpenAI.chat.completions.create({
-      model: "gpt-4.1",
-      messages: [
+
+
+    if (!AZURE_GROK_RESOURCE || !AZURE_GROK_DEPLOYMENT || !AZURE_OPENAI_API_KEY || !AZURE_OPENAI_API_VERSION) {
+      throw new Error("One or more Azure OpenAI environment variables are not set.");
+    }
+
+    let response;
+    try {
+      response = await axios.post(
+        AZURE_GROK_ENDPOINT,
         {
-          role: "system",
-          content: "You are a UX Data Analyst and UI Expert. You must respond with valid JSON only that matches the exact structure provided."
+          messages: [
+            { role: "system", content: "You are a UX analysis AI that responds ONLY with valid JSON. Never include explanations or text outside of the JSON object." },
+            { role: "user", content: analysisPrompt }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          top_p: 1.0,
+          frequency_penalty: 0.0,
+          presence_penalty: 0.0
         },
         {
-          role: "user",
-          content: analysisPrompt
+          headers: {
+            "api-key": AZURE_OPENAI_API_KEY,
+            "Content-Type": "application/json"
+          }
         }
-      ],
-      max_tokens: 800,
-      temperature: 1.0,
-      top_p: 1.0,
-      frequency_penalty: 0.0,
-      presence_penalty: 0.0,
-      response_format: { type: "json_object" }
-    })
+      );
+    } catch (apiError) {
+      console.error("Azure Grok API call failed:", apiError);
+      throw new Error("Azure Grok API call failed");
+    }
 
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('No response from Azure OpenAI')
+    const content = response.data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("No response from Azure Grok");
+
+    // Direct attempt to parse the content as JSON first
+    if (typeof content === 'string') {
+      try {
+        // Try direct parsing first
+        const directParsed = JSON.parse(content.trim());
+        if (directParsed && typeof directParsed === 'object') {
+          // Ensure we have the required fields
+          const validatedResult = {
+            summary: directParsed.summary || "Analysis completed successfully.",
+            problems: Array.isArray(directParsed.problems) ? directParsed.problems : [],
+            issues: Array.isArray(directParsed.issues) ? directParsed.issues : []
+          };
+          return AnalysisResultSchema.parse(validatedResult);
+        }
+      } catch (_e) {
+        // Direct JSON parsing failed, trying alternative methods
+      }
     }
 
     try {
-      // Try to parse the response as JSON
-      const object = JSON.parse(content)
-      
-      // Validate against the schema
-      try {
-        return AnalysisResultSchema.parse(object)
-      } catch (schemaError) {
-        console.error('Schema validation error:', schemaError)
-        console.error('Invalid response structure:', content)
-        throw new Error('AI response did not match expected format')
+      // If content is a string, try to parse it as JSON
+      if (typeof content === 'string') {
+        try {
+          // Try to extract JSON from the string if it contains JSON
+          // Check if the content is a raw JSON string that needs to be parsed
+          if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+            const object = JSON.parse(content);
+            return AnalysisResultSchema.parse(object);
+          } 
+          
+          // If the content contains JSON embedded in text, try to extract it
+          // Use a more robust approach to find complete JSON objects
+          try {
+            // Try to find a complete JSON object by looking for balanced braces
+            let depth = 0;
+            let startIndex = -1;
+            let extractedJson = '';
+            
+            for (let i = 0; i < content.length; i++) {
+              if (content[i] === '{') {
+                if (depth === 0) {
+                  startIndex = i;
+                }
+                depth++;
+              } else if (content[i] === '}') {
+                depth--;
+                if (depth === 0 && startIndex !== -1) {
+                  // We found a complete JSON object
+                  extractedJson = content.substring(startIndex, i + 1);
+                  try {
+                    const object = JSON.parse(extractedJson);
+                    if (object && typeof object === 'object') {
+                      return AnalysisResultSchema.parse(object);
+                    }
+                  } catch (_e) {
+                    // Found JSON-like structure but failed to parse
+                  }
+                }
+              }
+            }
+          } catch (_jsonError) {
+            // Failed to extract JSON
+          }
+          
+          // If we couldn't extract valid JSON, treat it as a summary string
+          return AnalysisResultSchema.parse({
+            summary: content,
+            problems: [],
+            issues: []
+          });
+        } catch (_e) {
+          // If it's not valid JSON, maybe it's just a summary string, so wrap it
+          return AnalysisResultSchema.parse({
+            summary: content,
+            problems: [],
+            issues: []
+          });
+        }
       }
-    } catch (parseError) {
-      console.error('Failed to parse response:', content)
-      console.error('Parse error:', parseError)
-      throw new Error('AI response was not valid JSON')
+      // If content is already an object, use it directly
+      if (typeof content === 'object') {
+        return AnalysisResultSchema.parse(content);
+      }
+      throw new Error('Unexpected content type from Azure Grok');
+    } catch (_parseError) {
+      throw new Error('Azure Grok response was not valid JSON');
     }
   } catch (error) {
-    console.error('Error analyzing content:', error)
     return {
       summary: 'Analysis failed. Please try again.',
       problems: [{
@@ -210,6 +292,6 @@ export async function analyzeContent(data: AnalysisData): Promise<AnalysisResult
         error: ['error'],
       }],
       issues: []
-    }
+    };
   }
 }

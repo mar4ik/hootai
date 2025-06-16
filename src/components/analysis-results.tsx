@@ -23,6 +23,8 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
   const { user } = useAuth()
   const isAuthenticated = !!user
 
+
+
   // Detect if summary is the search engine message
   const isSearchEngineSummary = result?.summary === "This is a general search engine page, which doesn't have a specific user flow or UI content to analyze."
   const isEmailInput = result?.summary === "The input appears to be an email address, which is not valid for UX analysis."
@@ -117,6 +119,7 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
 
         {result.summary && (
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <h2 className="text-xl font-bold mb-2">Summary</h2>
             <p className="text-blue-800">{result.summary}</p>
           </div>
         )}
@@ -143,18 +146,21 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
 
               <ul className="space-y-4 pl-5">
                 {/* Show 40% of problems for unauthenticated users */}
-                {isAuthenticated 
-                  ? result.problems.map((problem, index) => (
-                    <li key={index} className="list-disc list-outside">
-                      <span className="font-semibold">{problem.title}:</span> {problem.description}
-                    </li>
-                  ))
-                  : result.problems.slice(0, Math.ceil(result.problems.length * 0.4)).map((problem, index) => (
-                    <li key={index} className="list-disc list-outside">
-                      <span className="font-semibold">{problem.title}:</span> {problem.description}
-                    </li>
-                  ))
-                }
+                {(isAuthenticated 
+                  ? result.problems
+                  : result.problems.slice(0, Math.ceil(result.problems.length * 0.4))
+                ).map((problem, index) => (
+                  <li key={index} className="list-disc list-outside">
+                    <span className="font-semibold">{problem.title}:</span> {problem.description}
+                    {problem.error && problem.error.length > 0 && (
+                      <ul className="list-disc pl-6 text-sm text-red-600">
+                        {problem.error.map((err, j) => (
+                          <li key={j}>{err}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -165,80 +171,46 @@ export function AnalysisResults({ onStartOver }: AnalysisResultsProps) {
               </div>
 
               {/* Show 40% of issues for unauthenticated users */}
-              {isAuthenticated 
-                ? result.issues.map((issue) => (
-                  <div key={issue.id} className="space-y-2">
-                    <h4 className="flex items-center gap-2 font-medium text-blue-700">
-                      <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
-                    </h4>
+              {(isAuthenticated 
+                ? result.issues
+                : result.issues.slice(0, Math.ceil(result.issues.length * 0.4))
+              ).map((issue) => (
+                <div key={issue.id} className="space-y-2">
+                  <h4 className="flex items-center gap-2 font-medium text-blue-700">
+                    <span className="text-blue-500">◆</span> {issue.id}. {issue.title} <span className="text-xs text-gray-500">({issue.priorityList})</span>
+                  </h4>
 
-                    <ul className="space-y-4 pl-5">
+                  <ul className="space-y-4 pl-5">
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">Observation:</span> {issue.observation}
+                    </li>
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">Impact:</span> {issue.impact}
+                    </li>
+                    {issue.suggestion && (
                       <li className="list-disc list-outside">
-                        <span className="font-semibold">Observation:</span> {issue.observation}
+                        <span className="font-semibold">Suggestion:</span> {issue.suggestion}
                       </li>
+                    )}
+                    {issue.aptestplan && (
                       <li className="list-disc list-outside">
-                        <span className="font-semibold">Impact:</span> {issue.impact}
+                        <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
                       </li>
-                      {issue.suggestion && (
-                        <li className="list-disc list-outside">
-                          <span className="font-semibold">Suggestion:</span> {issue.suggestion}
-                        </li>
+                    )}
+                    <li className="list-disc list-outside">
+                      <span className="font-semibold">Priority:</span>{' '}
+                      {issue.priorityList && (
+                        <>
+                          {issue.priorityList.toLowerCase().includes('critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
+                          {issue.priorityList.toLowerCase().includes('medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
+                          {issue.priorityList.toLowerCase().includes('low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
+                          {issue.priorityList}
+                        </>
                       )}
-                      {issue.aptestplan && (
-                        <li className="list-disc list-outside">
-                          <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan}
-                        </li>
-                      )}
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Priority:</span>{' '}
-                        {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
-                        {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
-                        {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
-                        {issue.priorityList}
-                      </li>
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Estimation:</span> {issue.estimation}
-                      </li>
-                    </ul>
-                  </div>
-                ))
-                : result.issues.slice(0, Math.ceil(result.issues.length * 0.4)).map((issue) => (
-                  <div key={issue.id} className="space-y-2">
-                    <h4 className="flex items-center gap-2 font-medium text-blue-700">
-                      <span className="text-blue-500">◆</span> {issue.id}. {issue.title}
-                    </h4>
-
-                    <ul className="space-y-4 pl-5">
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Observation:</span> {issue.observation}
-                      </li>
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Impact:</span> {issue.impact}
-                      </li>
-                      {issue.suggestion && (
-                        <li className="list-disc list-outside">
-                          <span className="font-semibold">Suggestion:</span> {issue.suggestion.substring(0, 100)}...
-                        </li>
-                      )}
-                      {issue.aptestplan && (
-                        <li className="list-disc list-outside">
-                          <span className="font-semibold">A/B Test Plan:</span> {issue.aptestplan.substring(0, 100)}...
-                        </li>
-                      )}
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Priority:</span>{' '}
-                        {issue.priorityList.includes('Critical') && <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>}
-                        {issue.priorityList.includes('Medium') && <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>}
-                        {issue.priorityList.includes('Low') && <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span>}
-                        {issue.priorityList}
-                      </li>
-                      <li className="list-disc list-outside">
-                        <span className="font-semibold">Estimation:</span> {issue.estimation}
-                      </li>
-                    </ul>
-                  </div>
-                ))
-              }
+                    </li>
+                  </ul>
+                </div>
+              ))}
             </div>
           </>
         )}

@@ -82,9 +82,29 @@ export const useAnalysisStore = create<AnalysisState>()(
           }
           
           const result = await response.json()
+          
+          // Validate that the result has the expected structure
+          if (!result || typeof result !== 'object') {
+            throw new Error('Received invalid analysis result format');
+          }
+          
+          // Ensure we have at least a summary field
+          if (!result.summary) {
+            result.summary = 'Analysis completed, but no summary was provided.';
+          }
+          
+          // Ensure problems array exists
+          if (!Array.isArray(result.problems)) {
+            result.problems = [];
+          }
+          
+          // Ensure issues array exists
+          if (!Array.isArray(result.issues)) {
+            result.issues = [];
+          }
+          
           set({ result, isLoading: false })
         } catch (error) {
-          console.error('Analysis error:', error)
           set({ 
             error: error instanceof Error ? error.message : 'Failed to analyze content', 
             isLoading: false 
@@ -125,10 +145,10 @@ export const useAnalysisStore = create<AnalysisState>()(
             // Verify the data was saved correctly
             const savedStr = localStorage.getItem(name);
             if (!savedStr) {
-              console.error('Failed to save analysis data to localStorage');
+              // Failed to save analysis data to localStorage
             }
-          } catch (e) {
-            console.error('Error saving analysis data to localStorage:', e);
+          } catch (_e) {
+            // Error saving analysis data to localStorage
           }
         },
         removeItem: (name) => {
