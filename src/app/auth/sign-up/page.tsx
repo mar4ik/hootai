@@ -140,6 +140,30 @@ function SignUpContent() {
     }
   }
 
+  const handleRedirectAfterAuth = (userId: string) => {
+    // Check if we have a return_to parameter
+    if (returnTo === 'analysis') {
+      // Set the preservation flag
+      localStorage.setItem('preserve_analysis', 'true')
+      
+      // Create a timestamp to help with debugging
+      localStorage.setItem('login_timestamp', Date.now().toString())
+      
+      // Ensure we're redirecting to the correct origin based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        // Ensure we redirect to localhost, not production
+        window.location.href = window.location.origin + '/'
+      } else {
+        // Production redirect
+        window.location.href = '/'
+      }
+    } else {
+      // Regular redirect to home
+      window.location.href = '/'
+    }
+  }
+
   const handleGoogleSignUp = () => {
     try {
       setIsGoogleLoading(true)

@@ -201,6 +201,11 @@ function ContentWithParams() {
           // Always explicitly use the stored local origin to prevent redirect issues
           window.location.href = `${localOrigin}/`;
           return; // Ensure we exit early
+        } else if (currentIsLocal) {
+          // We're on localhost but not in dev mode - still use the full origin to be safe
+          console.log("On localhost, using full origin for redirect");
+          window.location.href = `${window.location.origin}/`;
+          return;
         } else {
           // Normal production redirect
           console.log("Redirecting to production origin:", window.location.origin);
