@@ -1,64 +1,88 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useCallback } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { ArrowLeft, Lock } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import { getAuthCallbackUrl, storeEnvironmentInfo, SUPABASE_CONFIG } from "@/lib/env-config"
 
-// Add server-side logging
-console.log("🔍 SERVER: Auth sign-in page module loaded");
-
-// Component to handle URL params in a single place
-function ParamsHandler({ 
-  setMessage, 
-  onReturnToParam 
-}: { 
-  setMessage: (message: { type: "success" | "error", text: string } | null) => void,
-  onReturnToParam: (returnTo: string | null) => void
+// Component to handle URL params - isolated to ensure proper Suspense boundary
+function ParamsHandler({ onParamsReady }: { 
+  onParamsReady: (returnTo: string | null, error: string | null) => void 
 }) {
   const searchParams = useSearchParams()
   
   useEffect(() => {
-    // Handle error param
-    const errorParam = searchParams?.get('error')
-    if (errorParam) {
-      setMessage({ 
-        type: "error", 
-        text: decodeURIComponent(errorParam)
-      })
-    }
-    
-    // Handle return_to param
     const returnTo = searchParams?.get('return_to')
-    onReturnToParam(returnTo)
-  }, [searchParams, setMessage, onReturnToParam])
+    const error = searchParams?.get('error')
+    onParamsReady(returnTo, error)
+  }, [searchParams, onParamsReady])
   
   return null
 }
 
 // Main sign-in component
 function SignInContent() {
-  console.log("🔍 SERVER: SignInContent component rendering");
   
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [returnTo, setReturnTo] = useState<string | null>(null)
   const [urlError, setUrlError] = useState<string | null>(null)
   const { user } = useAuth()
+  const [mounted, setMounted] = useState(false)
   
+  // Only show on client side to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Auto-hide success message after a few seconds
+  useEffect(() => {
+    if (message?.type === 'success') {
+      const timer = setTimeout(() => {
+        setMessage(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   // Handle params from URL
   const handleParamsReady = (returnTo: string | null, error: string | null) => {
     if (returnTo) setReturnTo(returnTo)
     if (error) setUrlError(error)
   }
 
-  // Check for auth state
+  // Define handleRedirectAfterAuth with useCallback to avoid dependency issues
+  const handleRedirectAfterAuth = useCallback((_userId: string) => {
+    // Check if we have a return_to parameter
+    if (returnTo === 'analysis') {
+      // Set the preservation flag
+      localStorage.setItem('preserve_analysis', 'true')
+      
+      // Create a timestamp to help with debugging
+      localStorage.setItem('login_timestamp', Date.now().toString())
+      
+      // Ensure we're redirecting to the correct origin based on environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        // Ensure we redirect to localhost, not production
+        window.location.href = window.location.origin + '/'
+      } else {
+        // Production redirect
+        window.location.href = '/'
+      }
+    } else {
+      // Regular redirect to home
+      window.location.href = '/'
+    }
+  }, [returnTo])
+
+  // Handle redirection after successful sign-in
   useEffect(() => {
     // If user is authenticated and we have a return_to parameter, redirect
     if (user && returnTo === 'analysis') {
@@ -69,7 +93,7 @@ function SignInContent() {
       
       return () => clearTimeout(timer)
     }
-  }, [user, returnTo])
+  }, [user, returnTo, handleRedirectAfterAuth])
 
   const validateEmail = (email: string): boolean => {
     // Basic email validation regex
@@ -142,16 +166,14 @@ function SignInContent() {
       const { error } = await passwordlessSignIn(email)
       
       if (error) {
-        console.error("Email sign-in error:", error)
         setMessage({ type: "error", text: error.message })
       } else {
         setMessage({ 
           type: "success", 
-          text: "Check your email for a login link!" 
+          text: "✅ Link sent successfully! Check your email." 
         })
       }
     } catch (error) {
-      console.error("Unexpected error during email sign-in:", error)
       setMessage({ 
         type: "error", 
         text: "An unexpected error occurred. Please try again." 
@@ -161,122 +183,97 @@ function SignInContent() {
     }
   }
 
-  const handleRedirectAfterAuth = (userId: string) => {
-    // Check if we have a return_to parameter
-    if (returnTo === 'analysis') {
-      // Set the preservation flag
-      localStorage.setItem('preserve_analysis', 'true')
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true)
       
-      // Create a timestamp to help with debugging
-      localStorage.setItem('login_timestamp', Date.now().toString())
+      // Store environment information for callback
+      storeEnvironmentInfo();
       
-      // Ensure we're redirecting to the correct origin based on environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocalhost) {
-        // Ensure we redirect to localhost, not production
-        window.location.href = window.location.origin + '/'
-      } else {
-        // Production redirect
-        window.location.href = '/'
+      // Save return_to info so callback can use it
+      if (returnTo) {
+        localStorage.setItem('auth_return_to', returnTo);
       }
-    } else {
-      // Regular redirect to home
-      window.location.href = '/'
+      
+      // Get the appropriate callback URL based on environment
+      const redirectTo = getAuthCallbackUrl();
+      
+      // Create Google auth URL with specific redirect parameters
+      const supabaseAuthUrl = SUPABASE_CONFIG.url;
+      
+      // Build the auth URL with proper parameters
+      const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+      
+      // Redirect browser directly to Google auth
+      window.location.href = googleAuthUrl;
+      return;
+    } catch (error) {
+      setMessage({ 
+        type: "error", 
+        text: error instanceof Error ? error.message : "Failed to sign in with Google" 
+      })
+      setIsGoogleLoading(false)
     }
   }
 
-  const handleGoogleSignIn = () => {
-    try {
-      setIsLoading(true)
-      
-      // Check if we're in a local environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      console.log("🔍 handleGoogleSignIn - isLocalhost:", isLocalhost);
-      console.log("🔍 Current URL:", window.location.href);
-      
-      // For localhost, we need special handling to prevent redirection to production
-      if (isLocalhost) {
-        // Store the local origin for callback to use
-        localStorage.setItem('force_local_redirect', 'true');
-        localStorage.setItem('local_origin', window.location.origin);
-        localStorage.setItem('dev_mode', 'true');
-        localStorage.setItem('dev_port', window.location.port || '3000');
-        
-        // Save return_to info so callback can use it
-        if (returnTo) {
-          localStorage.setItem('auth_return_to', returnTo);
-        }
-        
-        console.log("🔍 Set localStorage flags:", {
-          dev_mode: localStorage.getItem('dev_mode'),
-          local_origin: localStorage.getItem('local_origin'),
-          dev_port: localStorage.getItem('dev_port'),
-          force_local_redirect: localStorage.getItem('force_local_redirect'),
-          auth_return_to: localStorage.getItem('auth_return_to')
-        });
-        
-        // Explicitly use the full callback URL with the origin
-        const redirectTo = `${window.location.origin}/auth/login-callback`;
-        
-        // Hard-code the production Supabase URL for auth
-        const supabaseAuthUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
-        
-        // Create Google auth URL with specific redirect parameters
-        // Use localhost URL as the redirect URL in the request to Supabase
-        const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&redirect_url_is_localhost=true`;
-        
-        // Log for debugging
-        console.log('🔍 Using localhost Google auth URL:', googleAuthUrl);
-        
-        // Redirect browser directly to Google auth
-        console.log('🔄 Redirecting to Google auth URL...');
-        
-        // Delay the redirect slightly to ensure console logs are visible
-        setTimeout(() => {
-          window.location.href = googleAuthUrl;
-        }, 500);
-        return;
-      }
-      
-      // For production, use the regular process
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      
-      if (!supabaseUrl) {
-        setMessage({ type: "error", text: "Missing Supabase URL configuration" })
-        setIsLoading(false)
-        return
-      }
-      
-      // Construct the redirect URL - always explicitly use full origin
-      const redirectUrl = `${window.location.origin}/auth/login-callback`
-      
-      // Construct Google OAuth URL directly
-      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
-      
-      // Redirect browser directly to Google auth
-      window.location.href = googleAuthUrl
-    } catch (err) {
-      console.error("Error during Google sign-in:", err)
-      setMessage({ 
-        type: "error", 
-        text: err instanceof Error ? err.message : "An unknown error occurred"
-      })
-      setIsLoading(false)
-    }
+  // To prevent hydration mismatch, render a skeleton during SSR
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold">Sign in</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in to your account to continue
+            </p>
+          </div>
+          <div className="space-y-6">
+            <div className="flex flex-col space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Continue with</span>
+                </div>
+              </div>
+              
+              <Button
+                disabled={true}
+                className="w-full flex items-center justify-center gap-2"
+                variant="outline"
+              >
+                <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                Google
+              </Button>
+            </div>
+
+            <div className="text-center text-sm">
+              <p>
+                Don&apos;t have an account?{" "}
+                <Link href="/auth/sign-up" className="text-blue-600 hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        {/* Wrap the params handler in Suspense */}
+        {/* Handle params with proper Suspense boundary */}
         <Suspense fallback={null}>
-          <ParamsHandler setMessage={setMessage} onReturnToParam={setReturnTo} />
+          <ParamsHandler onParamsReady={handleParamsReady} />
         </Suspense>
         
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Sign In</h1>
+          <h1 className="text-3xl font-bold">Sign in</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email to receive a magic link
+            Sign in to your account to continue
           </p>
         </div>
 
@@ -287,95 +284,134 @@ function SignInContent() {
             </div>
             
             <div className="flex justify-center">
-              <Link href="/protected">
+              <Link href="/">
                 <Button className="flex items-center gap-2">
-                  <Lock size={16} /> View Protected Content
+                  Continue to Dashboard
                 </Button>
               </Link>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Show URL error if present */}
+            {urlError && (
+              <div className="p-4 bg-red-50 rounded-md border border-red-100">
+                <p className="text-red-800 text-sm">{urlError}</p>
+              </div>
+            )}
+            
+            {/* Show message if present */}
+            {message && (
+              <div className={`p-4 rounded-md border ${
+                message.type === "success" 
+                  ? "bg-green-50 border-green-100" 
+                  : "bg-red-50 border-red-100"
+              }`}>
+                <p className={message.type === "success" ? "text-green-800" : "text-red-800"}>
+                  {message.text}
+                </p>
+              </div>
+            )}
+            
+            {/* Email sign-in form */}
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium">
                   Email address
                 </label>
-                <Input
+                <input
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="your@email.com"
+                  placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    // Clear validation error when user types
-                    if (validationError) setValidationError(null)
-                  }}
-                  className={`w-full ${validationError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {validationError && (
                   <p className="text-sm text-red-500 mt-1">{validationError}</p>
                 )}
               </div>
-
+              
               <Button
                 type="submit"
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Sending link..." : "Sign in with Email"}
+                {isLoading ? "Sending link..." : "Send Magic Link"}
               </Button>
             </form>
-
-            {message && (
-              <div className={`p-4 rounded-md ${
-                message.type === "success" 
-                  ? "bg-green-50 border border-green-100 text-green-800" 
-                  : "bg-red-50 border border-red-100 text-red-800"
-              }`}>
-                <p>{message.text}</p>
+            
+            <div className="flex flex-col space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Continue with</span>
+                </div>
               </div>
-            )}
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or</span>
-              </div>
+              
+              <Button
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                className="w-full flex items-center justify-center gap-2"
+                variant="outline"
+              >
+                {isGoogleLoading ? (
+                  <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                ) : (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                    <path
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      fill="#EA4335"
+                    />
+                  </svg>
+                )}
+                Google
+              </Button>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading || isLoading}
-            >
-              {isGoogleLoading ? "Signing in..." : "Sign in with Google"}
-            </Button>
+            <div className="text-center text-sm">
+              <p>
+                Don&apos;t have an account?{" "}
+                <Link href="/auth/sign-up" className="text-blue-600 hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            </div>
           </div>
         )}
-
-        <div className="flex justify-center">
-          <Link href="/" className="text-sm text-gray-600 flex items-center space-x-1 hover:text-gray-800">
-            <ArrowLeft size={16} />
-            <span>Back to Home</span>
-          </Link>
-        </div>
       </div>
     </div>
   )
 }
 
-// Wrapped with Suspense
-export default function SignIn() {
+// Main page component with Suspense
+export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen flex-col items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-t-blue-500 border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+        </div>
+      </div>
+    }>
       <SignInContent />
     </Suspense>
   )

@@ -21,23 +21,17 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    // Get Supabase credentials
+    // Get Supabase credentials from environment
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
     
-    // Special fallback for production
-    const AUTH_FALLBACK_URL = 'https://eaennrqqtlmanbivdhqm.supabase.co';
-    
-    // Use fallback URL if needed
-    const url = supabaseUrl || AUTH_FALLBACK_URL;
-    
-    if (!url || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       console.error("Missing Supabase credentials");
       return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent("Server configuration error"), requestUrl.origin));
     }
     
     // Create Supabase client
-    const supabase = createClient(url, supabaseAnonKey, {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -76,8 +70,12 @@ export async function GET(request: NextRequest) {
             if (exchangeData?.session) {
               console.log("Session created from code exchange:", exchangeData.session.user.id);
               
+              // Get the site URL from environment or use the origin
+              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
+              console.log("Using site URL for redirect:", siteUrl);
+              
               // Create response with session cookies
-              const response = NextResponse.redirect(new URL('/', requestUrl.origin));
+              const response = NextResponse.redirect(new URL('/', siteUrl));
               
               // Set cookies to help with auth state persistence
               response.cookies.set('auth_success', 'true', { 
@@ -117,8 +115,12 @@ export async function GET(request: NextRequest) {
       
       console.log("Session found with user ID:", data.session.user.id);
       
+      // Get the site URL from environment or use the origin
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
+      console.log("Using site URL for redirect:", siteUrl);
+      
       // Create response with session cookies
-      const response = NextResponse.redirect(new URL('/', requestUrl.origin));
+      const response = NextResponse.redirect(new URL('/', siteUrl));
       
       // Set cookies to help with auth state persistence
       response.cookies.set('auth_success', 'true', { 

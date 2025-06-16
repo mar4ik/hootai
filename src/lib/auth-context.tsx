@@ -193,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [initAttempts, setInitAttempts] = useState(0);
-  const [sessionCheckTimeoutId, setSessionCheckTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [_sessionCheckTimeoutId, _setSessionCheckTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   // Reinitialize client
   const reinitializeClient = () => {
@@ -265,39 +265,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isClient) return;
     
     // Clear previous timeout if it exists
-    if (sessionCheckTimeoutId) {
-      clearTimeout(sessionCheckTimeoutId);
+    if (_sessionCheckTimeoutId) {
+      clearTimeout(_sessionCheckTimeoutId);
     }
     
     const checkAuthAndProfile = async () => {
       try {
-        // Get current client
+        setLoading(true);
+        
+        // Check for debug login mode first
+        if (typeof window !== 'undefined' && safeStorage.getItem('debug_login') === 'true') {
+          console.log("🔧 DEBUG: Using debug login mode");
+          try {
+            const debugUserStr = safeStorage.getItem('debug_user');
+            console.log("🔧 DEBUG: Debug user string:", debugUserStr);
+            
+            if (debugUserStr) {
+              const debugUser = JSON.parse(debugUserStr);
+              console.log("🔧 DEBUG: Parsed debug user:", debugUser);
+              setUser(debugUser as _User);
+              console.log("🔧 DEBUG: User state set to debug user");
+              
+              // Force a state update to ensure the UI reflects the debug user
+              setTimeout(() => {
+                console.log("🔧 DEBUG: Checking if user state was updated:", user);
+              }, 100);
+              
+              setLoading(false);
+              return;
+            } else {
+              console.warn("🔧 DEBUG: debug_login is true but no debug_user found");
+            }
+          } catch (e) {
+            console.error("Failed to parse debug user:", e);
+          }
+        } else {
+          console.log("🔧 DEBUG: Debug login mode not active:", {
+            debug_login: typeof window !== 'undefined' ? safeStorage.getItem('debug_login') : 'N/A (SSR)'
+          });
+        }
+        
+        // Get the Supabase client
         const client = getOrInitClient();
         
+        // If no client, we can't proceed
         if (!client) {
-          console.error("No Supabase client available in AuthProvider");
-          
-          // Set a timeout to retry client initialization
-          const timeoutId = setTimeout(() => {
-            if (initAttempts < 3) {
-              reinitializeClient();
-            } else {
-              setError("Unable to initialize authentication. Please try refreshing the page.");
-              setLoading(false);
-            }
-          }, 2000);
-          
-          setSessionCheckTimeoutId(timeoutId);
+          console.error("No Supabase client available");
+          setError("Authentication service unavailable");
+          setLoading(false);
           return;
         }
-
-        // Get the current session with retry
-        const { data: { session }, error } = await withRetry(
-          () => client.auth.getSession(),
-          3,
-          1000
-        );
-
+        
+        // Get the session
+        const { data, error } = await client.auth.getSession();
+        
         if (error) {
           console.error("Error getting session:", error.message);
           setError(error.message);
@@ -306,16 +327,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (session?.user) {
+        if (data?.session?.user) {
           // Convert Supabase user to our User type
           const userData: _User = {
-            id: session.user.id,
-            email: session.user.email,
-            role: session.user.role,
-            app_metadata: session.user.app_metadata,
-            user_metadata: session.user.user_metadata,
-            aud: session.user.aud,
-            created_at: session.user.created_at
+            id: data.session.user.id,
+            email: data.session.user.email,
+            role: data.session.user.role,
+            app_metadata: data.session.user.app_metadata,
+            user_metadata: data.session.user.user_metadata,
+            aud: data.session.user.aud,
+            created_at: data.session.user.created_at
           };
 
           setUser(userData);
@@ -395,11 +416,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscription.unsubscribe();
       }
       
-      if (sessionCheckTimeoutId) {
-        clearTimeout(sessionCheckTimeoutId);
+      if (_sessionCheckTimeoutId) {
+        clearTimeout(_sessionCheckTimeoutId);
       }
     };
-  }, [isClient, router, initAttempts, sessionCheckTimeoutId]);
+  }, [isClient, router, initAttempts, _sessionCheckTimeoutId]);
 
   // Force create profile
   const forceCreateProfile = async () => {
@@ -476,69 +497,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out function
   const signOut = async () => {
     try {
-      const client = getOrInitClient();
-      if (!client) throw new Error("Supabase client not available");
-      
       setLoading(true);
       
-      const { error } = await client.auth.signOut();
+      // Clear any flags that might cause redirect loops
+      if (typeof window !== 'undefined') {
+        // Clear all localStorage items that could cause issues
+        safeStorage.removeItem('debug_mode');
+        safeStorage.removeItem('debug_login');
+        safeStorage.removeItem('debug_user');
+        safeStorage.removeItem('dev_mode');
+        safeStorage.removeItem('local_origin');
+        safeStorage.removeItem('force_local_redirect');
+        safeStorage.removeItem('dev_port');
+      }
       
-      if (error) throw error;
+      // Get the client
+      const client = getOrInitClient();
       
-      // Clear user state
+      // If we have a client, sign out properly
+      if (client) {
+        await withRetry(() => client.auth.signOut(), 2, 500);
+      }
+      
+      // Always clear the user state
       setUser(null);
       
-      // Clear all authentication-related cookies
-      const cookies = document.cookie.split(';');
-      for (const cookie of cookies) {
-        const [name] = cookie.split('=').map(part => part.trim());
-        if (name.startsWith('sb-') || name.includes('supabase') || name === 'auth_success' || name === 'user_id') {
-          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
-        }
-      }
-      
-      // Clear local storage items related to Supabase, but preserve analysis data
-      if (typeof localStorage !== 'undefined') {
-        // Find all Supabase related items
-        const itemsToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          // Skip the analysis storage key to preserve user analysis data
-          if (key && (key.includes('supabase') || key.includes('sb-')) && !key.includes('hootai-analysis-storage')) {
-            itemsToRemove.push(key);
-          }
-        }
-        
-        // Remove them
-        itemsToRemove.forEach(key => {
-          localStorage.removeItem(key);
-        });
-      }
-      
-      // Clear session storage items related to authentication
-      if (typeof sessionStorage !== 'undefined') {
-        // Find all auth-related items
-        const sessionItemsToRemove: string[] = [];
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key && (key.includes('supabase') || key.includes('sb-') || key.includes('auth'))) {
-            sessionItemsToRemove.push(key);
-          }
-        }
-        
-        // Remove them
-        sessionItemsToRemove.forEach(key => {
-          sessionStorage.removeItem(key);
-        });
-      }
-      
-      // Redirect to the main page instead of sign-in
+      // Redirect to home page
       router.push('/');
-    } catch (err) {
-      console.error("Error signing out:", err);
-      setError(err instanceof Error ? err.message : "An error occurred during sign out");
-    } finally {
+      
       setLoading(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to sign out");
+      setLoading(false);
+      
+      // Even if there's an error, still clear the user state and redirect to home
+      setUser(null);
+      router.push('/');
     }
   };
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ArrowLeft, Lock } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import { getAuthCallbackUrl, storeEnvironmentInfo, SUPABASE_CONFIG } from "@/lib/env-config"
 
 // Component to handle URL params - isolated to ensure proper Suspense boundary
 function ParamsHandler({ onParamsReady }: { 
@@ -140,7 +141,7 @@ function SignUpContent() {
     }
   }
 
-  const handleRedirectAfterAuth = (userId: string) => {
+  const _handleRedirectAfterAuth = (_userId: string) => {
     // Check if we have a return_to parameter
     if (returnTo === 'analysis') {
       // Set the preservation flag
@@ -168,74 +169,26 @@ function SignUpContent() {
     try {
       setIsGoogleLoading(true)
       
-      // Check if we're in a local environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      console.log("🔍 handleGoogleSignUp - isLocalhost:", isLocalhost);
+      // Store environment information for callback
+      storeEnvironmentInfo();
       
-      // For localhost, we need special handling to prevent redirection to production
-      if (isLocalhost) {
-        // Store the local origin for callback to use
-        localStorage.setItem('force_local_redirect', 'true');
-        localStorage.setItem('local_origin', window.location.origin);
-        localStorage.setItem('dev_mode', 'true');
-        localStorage.setItem('dev_port', window.location.port || '3000');
-        
-        // Save return_to info so callback can use it
-        if (returnTo) {
-          localStorage.setItem('auth_return_to', returnTo);
-        }
-        
-        console.log("🔍 Set localStorage flags:", {
-          dev_mode: localStorage.getItem('dev_mode'),
-          local_origin: localStorage.getItem('local_origin'),
-          dev_port: localStorage.getItem('dev_port'),
-          force_local_redirect: localStorage.getItem('force_local_redirect'),
-          auth_return_to: localStorage.getItem('auth_return_to')
-        });
-        
-        // Explicitly use the full callback URL with the origin
-        const redirectTo = `${window.location.origin}/auth/login-callback`;
-        
-        // Hard-code the production Supabase URL for auth
-        const supabaseAuthUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
-        
-        // Create Google auth URL with specific redirect parameters
-        // Use localhost URL as the redirect URL in the request to Supabase
-        const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&redirect_url_is_localhost=true`;
-        
-        // Log for debugging
-        console.log('🔍 Using localhost Google auth URL:', googleAuthUrl);
-        
-        // Redirect browser directly to Google auth
-        console.log('🔄 Redirecting to Google auth URL...');
-        window.location.href = googleAuthUrl;
-        return;
-      }
-      
-      // For production, use the regular process
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      
-      if (!supabaseUrl) {
-        setMessage({ type: "error", text: "Missing Supabase URL configuration" })
-        setIsGoogleLoading(false)
-        return
-      }
-      
-      // Save return_to info to localStorage so callback can use it
+      // Save return_to info so callback can use it
       if (returnTo) {
-        localStorage.setItem('auth_return_to', returnTo)
+        localStorage.setItem('auth_return_to', returnTo);
       }
       
-      // Construct the redirect URL - always explicitly use full origin
-      const redirectUrl = `${window.location.origin}/auth/login-callback`
+      // Get the appropriate callback URL based on environment
+      const redirectTo = getAuthCallbackUrl();
       
-      // Construct Google OAuth URL directly
-      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`
+      // Create Google auth URL with specific redirect parameters
+      const supabaseAuthUrl = SUPABASE_CONFIG.url;
+      
+      // Build the auth URL with proper parameters
+      const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
       
       // Redirect browser directly to Google auth
-      window.location.href = googleAuthUrl
+      window.location.href = googleAuthUrl;
     } catch (err) {
-      console.error("Error during Google sign-up:", err)
       setMessage({ 
         type: "error", 
         text: err instanceof Error ? err.message : "An unknown error occurred"

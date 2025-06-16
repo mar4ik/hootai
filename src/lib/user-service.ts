@@ -12,7 +12,7 @@ const getSupabaseClient = () => {
     : supabaseUrl;
   
   // Fallback URL for production
-  const fallbackUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
+  const fallbackUrl = 'https://hootai.am';
   
   // Use fallback if needed
   const effectiveUrl = url || fallbackUrl;
@@ -120,7 +120,7 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
   try {
     // Create a new profile if it doesn't exist
     // Use RPC to bypass RLS policies for initial creation
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .rpc('create_user_profile', { 
         user_id: userId,
         current_timestamp: new Date().toISOString()

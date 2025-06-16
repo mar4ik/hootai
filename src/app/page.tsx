@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 
 export default function Home() {
   const pathname = usePathname()
-  const router = useRouter()
+  const _router = useRouter()
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   
   // Track if this is the first load

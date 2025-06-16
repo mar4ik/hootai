@@ -85,7 +85,4 @@ if (!isCompatible && !ignoreNodeVersionCheck) {
 if (!isCompatible && ignoreNodeVersionCheck) {
   console.warn(`⚠️ Using Node.js ${currentNodeVersion}, which is not compatible with Next.js requirements.`);
   console.warn('Continuing anyway as NEXT_IGNORE_INCORRECT_NODE_VERSION is set to true.');
-} else {
-  // If we get here, we're using a compatible version
-  console.log(`✅ Using Node.js ${currentNodeVersion} (compatible with Next.js requirements)`);
 } 

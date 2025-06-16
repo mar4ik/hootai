@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 import Script from "next/script"
+import { isDevelopment, getSiteUrl, SUPABASE_CONFIG } from "@/lib/env-config"
 
 // Add server-side logging
 console.log("🔍 SERVER: Auth login-callback page module loaded");
@@ -34,26 +35,24 @@ function ImmediateRedirectCheck() {
                 force_local_redirect: localStorage.getItem('force_local_redirect')
               });
               
-              // Special case: Check if we're on the Supabase auth callback page
-              const isSupabaseCallback = window.location.href.includes('eaennrqqtlmanbivdhqm.supabase.co/auth/v1/callback');
-              if (isSupabaseCallback) {
+              // Get the current hostname and check if it's localhost
+              const hostname = window.location.hostname;
+              const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+              
+              // Get local origin from localStorage or construct it
+              const localOrigin = localStorage.getItem('local_origin') || 
+                                 'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
+              
+              // CRITICAL CHECK: If we're on Supabase's domain, we need to let the auth flow complete
+              if (window.location.href.includes('supabase.co/auth/v1/callback')) {
                 console.log("⚠️ Detected Supabase callback URL - will let it complete the auth flow");
                 return; // Allow Supabase to complete its auth flow
               }
               
-              // Check if this is a callback on the production site but we should be on localhost
-              const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
-              const isDevMode = localStorage.getItem('dev_mode') === 'true';
-              const hasLocalOrigin = !!localStorage.getItem('local_origin');
-              
-              console.log("🔍 Checks:", { isProdSite, isDevMode, hasLocalOrigin });
-              
-              if (isProdSite && (isDevMode || hasLocalOrigin)) {
-                console.log("⚠️ AUTH CALLBACK ON PRODUCTION SITE DETECTED - FORCING REDIRECT TO LOCALHOST");
-                
-                // Get local origin or fallback to localhost:3000
-                const localOrigin = localStorage.getItem('local_origin') || 
-                                   'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
+              // CRITICAL CHECK: If we're on production but have any indication we should be on localhost
+              if (!isLocalhost && (localStorage.getItem('dev_mode') === 'true' || 
+                                  localStorage.getItem('force_local_redirect') === 'true')) {
+                console.log("⚠️ AUTH CALLBACK ON NON-LOCALHOST DETECTED - FORCING REDIRECT TO LOCALHOST");
                 
                 // Get all search params and hash to preserve them in the redirect
                 const params = window.location.search || '';
@@ -65,7 +64,10 @@ function ImmediateRedirectCheck() {
                 
                 // Force the redirect without checking for redirect loops
                 window.location.href = redirectUrl;
+                return;
               }
+              
+              console.log("✅ No immediate redirect needed");
             } catch (e) {
               console.error('Error in immediate redirect check:', e);
             }
@@ -101,21 +103,26 @@ function ContentWithParams() {
             force_local_redirect: localStorage.getItem('force_local_redirect')
           });
           
-          const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
+          // ULTRA AGGRESSIVE REDIRECT DETECTION
+          // If we have any indication this should be on localhost but isn't, redirect immediately
+          const isLocalhost = isDevelopment();
           const isDevMode = localStorage.getItem('dev_mode') === 'true';
           const hasLocalOrigin = !!localStorage.getItem('local_origin');
           const localOrigin = localStorage.getItem('local_origin') || 
                              'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
           
-          console.log("🔍 Checks:", { isProdSite, isDevMode, hasLocalOrigin });
+          console.log("🔍 Checks:", { isDevMode, hasLocalOrigin, isLocalhost });
           
-          // Check if we should redirect to localhost
-          if ((isProdSite || !window.location.hostname.includes('localhost')) && 
-              (isDevMode || hasLocalOrigin)) {
+          // If we're not on localhost but we have any indication we should be, redirect
+          if (!isLocalhost && (isDevMode || hasLocalOrigin)) {
             console.log("⚠️ CRITICAL: Auth callback running on non-localhost in dev mode!");
-            
             console.log("🔄 Redirecting to local origin:", localOrigin);
-            window.location.href = `${localOrigin}/auth/login-callback${window.location.search}${window.location.hash}`;
+            
+            // Force the redirect with all parameters preserved
+            const redirectUrl = `${localOrigin}/auth/login-callback${window.location.search}${window.location.hash}`;
+            console.log("🔄 Redirecting to:", redirectUrl);
+            
+            window.location.href = redirectUrl;
             return; // Stop execution - we're redirecting
           }
         }
@@ -124,16 +131,15 @@ function ContentWithParams() {
         console.log("Auth callback running - searchParams:", {
           code: searchParams?.get('code') ? 'present' : 'missing',
           hash: typeof window !== 'undefined' ? (window.location.hash ? 'present' : 'missing') : 'n/a',
-          isLocal: typeof window !== 'undefined' ? 
-            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') : 'n/a',
+          isLocal: isDevelopment(),
           origin: typeof window !== 'undefined' ? window.location.origin : 'n/a',
           devMode: typeof window !== 'undefined' ? localStorage.getItem('dev_mode') : 'n/a',
           localOrigin: typeof window !== 'undefined' ? localStorage.getItem('local_origin') : 'n/a'
         });
         
         // Create a Supabase client for handling this callback
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        const supabaseUrl = SUPABASE_CONFIG.url;
+        const supabaseKey = SUPABASE_CONFIG.anonKey;
         
         if (!supabaseUrl || !supabaseKey) {
           throw new Error("Missing Supabase configuration")
@@ -193,45 +199,10 @@ function ContentWithParams() {
     }
     
     const handleRedirect = () => {
-      // Handle redirect based on environment
-      if (typeof window !== 'undefined') {
-        const isLocalDev = localStorage.getItem('dev_mode') === 'true';
-        const localOrigin = localStorage.getItem('local_origin');
-        
-        // Double check we're on localhost if we should be
-        const currentIsLocal = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1';
-        
-        console.log("🔍 DEBUG - handleRedirect", { 
-          isLocalDev, 
-          localOrigin, 
-          currentIsLocal,
-          hostname: window.location.hostname
-        });
-        
-        if (isLocalDev && localOrigin) {
-          // For local development, redirect to local origin
-          console.log("Redirecting to local origin:", localOrigin);
-          
-          // Make sure we're actually on localhost, otherwise we need to redirect
-          if (!currentIsLocal) {
-            console.log("Currently on production but need to be on localhost - redirecting");
-          }
-          
-          // Always explicitly use the stored local origin to prevent redirect issues
-          window.location.href = `${localOrigin}/`;
-          return; // Ensure we exit early
-        } else if (currentIsLocal) {
-          // We're on localhost but not in dev mode - still use the full origin to be safe
-          console.log("On localhost, using full origin for redirect");
-          window.location.href = `${window.location.origin}/`;
-          return;
-        } else {
-          // Normal production redirect
-          console.log("Redirecting to production origin:", window.location.origin);
-          window.location.href = `${window.location.origin}/`;
-        }
-      }
+      // Get the appropriate site URL based on environment
+      const siteUrl = getSiteUrl();
+      console.log("🔍 Redirecting to site URL:", siteUrl);
+      window.location.href = siteUrl;
     }
     
     handleCallback()

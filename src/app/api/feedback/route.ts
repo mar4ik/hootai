@@ -17,13 +17,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Map the score to a sentiment
+    let sentiment = 'neutral'
+    if (score >= 9) sentiment = 'positive'
+    else if (score <= 5) sentiment = 'negative'
+
     // For now, just log the feedback
-    console.log('Received NPS feedback:', { score, comment })
+    console.log('Received feedback:', { 
+      score, 
+      comment, 
+      sentiment,
+      timestamp: new Date().toISOString()
+    })
     
     // TODO: In the future, store this in Supabase
     // const { data, error } = await supabase
     //   .from('feedback')
-    //   .insert([{ score, comment, user_id: user?.id }])
+    //   .insert([{ 
+    //     score, 
+    //     comment, 
+    //     sentiment,
+    //     created_at: new Date().toISOString()
+    //   }])
     
     return NextResponse.json({ success: true })
   } catch (error) {
