@@ -119,25 +119,48 @@ export async function ensureUserProfile(userId: string): Promise<UserProfile | n
   
   try {
     // Create a new profile if it doesn't exist
+    // Use RPC to bypass RLS policies for initial creation
     const { data, error } = await supabase
-      .from('user_profiles')
-      .insert([
-        {
-          id: userId,
-          display_name: null,
-          bio: null,
-          avatar_url: null,
-          updated_at: new Date().toISOString()
-        },
-      ])
-      .select();
+      .rpc('create_user_profile', { 
+        user_id: userId,
+        current_timestamp: new Date().toISOString()
+      });
     
     if (error) {
       console.error('Error creating user profile:', error);
+      
+      // Fallback: Try direct insert as the authenticated user
+      // This will work if the user is creating their own profile
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUserId = authData?.user?.id;
+      
+      if (userId === currentUserId) {
+        const { data: insertData, error: insertError } = await supabase
+          .from('user_profiles')
+          .insert([
+            {
+              id: userId,
+              display_name: null,
+              bio: null,
+              avatar_url: null,
+              updated_at: new Date().toISOString()
+            },
+          ])
+          .select();
+        
+        if (insertError) {
+          console.error('Error in fallback profile creation:', insertError);
+          return null;
+        }
+        
+        return insertData[0] as UserProfile;
+      }
+      
       return null;
     }
     
-    return data[0] as UserProfile;
+    // Get the newly created profile
+    return getUserProfile(userId);
   } catch (err) {
     console.error('Unexpected error creating user profile:', err);
     return null;

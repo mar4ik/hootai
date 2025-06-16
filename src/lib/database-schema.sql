@@ -33,6 +33,12 @@ CREATE POLICY "Users can update their own profile"
   FOR UPDATE
   USING (auth.uid() = id);
 
+-- Policy: Users can insert their own profile
+CREATE POLICY "Users can insert their own profile" 
+  ON public.user_profiles
+  FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 -- Function to create a profile when a user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
