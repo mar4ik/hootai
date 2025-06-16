@@ -22,14 +22,6 @@ export async function POST(request: NextRequest) {
     if (score >= 9) sentiment = 'positive'
     else if (score <= 5) sentiment = 'negative'
 
-    // For now, just log the feedback
-    console.log('Received feedback:', { 
-      score, 
-      comment, 
-      sentiment,
-      timestamp: new Date().toISOString()
-    })
-    
     // TODO: In the future, store this in Supabase
     // const { data, error } = await supabase
     //   .from('feedback')

@@ -12,13 +12,6 @@ const nextConfig = {
     
     return config;
   },
-  // Environment variables with defaults
-  env: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : 'https://www.hootai.am'),
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://eaennrqqtlmanbivdhqm.supabase.co',
-  },
 };
 
 module.exports = nextConfig;

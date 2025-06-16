@@ -9,7 +9,6 @@ export default function AuthResetPage() {
   const [error, setError] = useState<string | null>(null)
   
   const addLog = (message: string) => {
-    console.log(`AUTH RESET: ${message}`)
     setLogs(prev => [...prev, message])
   }
   

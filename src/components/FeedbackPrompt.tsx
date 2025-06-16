@@ -8,20 +8,24 @@ interface FeedbackPromptProps {
 }
 
 type FeedbackScore = 'happy' | 'neutral' | 'sad' | null;
+type FeedbackState = 'initial' | 'submitting' | 'success' | 'collapsed';
 
 export function FeedbackPrompt({ show }: FeedbackPromptProps) {
   const [score, setScore] = useState<FeedbackScore>(null)
   const [comment, setComment] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [feedbackState, setFeedbackState] = useState<FeedbackState>('initial')
   const [shouldShow, setShouldShow] = useState(false)
   
   // Check if feedback has already been shown this session
   useEffect(() => {
     if (show) {
       const hasSeenFeedback = sessionStorage.getItem('hasSeenFeedback') === 'true';
+      const feedbackSubmitted = sessionStorage.getItem('feedbackSubmitted') === 'true';
       
-      if (!hasSeenFeedback) {
+      if (feedbackSubmitted) {
+        setFeedbackState('collapsed');
+        setShouldShow(true);
+      } else if (!hasSeenFeedback) {
         // Delay showing the feedback prompt by a few seconds after login
         const timer = setTimeout(() => {
           setShouldShow(true);
@@ -33,17 +37,21 @@ export function FeedbackPrompt({ show }: FeedbackPromptProps) {
   }, [show]);
 
   // Don't render if we shouldn't show the component
-  if (!show || !shouldShow || submitted) {
+  if (!show || !shouldShow) {
     return null;
   }
 
   const handleSubmit = async () => {
     if (score === null) return;
     
-    setIsSubmitting(true);
+    setFeedbackState('submitting');
     
     try {
-      await fetch('/api/feedback', {
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,41 +60,79 @@ export function FeedbackPrompt({ show }: FeedbackPromptProps) {
           score: score === 'happy' ? 10 : score === 'neutral' ? 7 : 3,
           comment 
         }),
+        signal: controller.signal
       });
       
-      // Mark as seen for this session
-      sessionStorage.setItem('hasSeenFeedback', 'true');
+      clearTimeout(timeoutId);
       
-      setSubmitted(true);
+      // Mark as seen and submitted for this session
+      sessionStorage.setItem('hasSeenFeedback', 'true');
+      sessionStorage.setItem('feedbackSubmitted', 'true');
+      
+      // Show success state
+      setFeedbackState('success');
+      
+      // Auto-collapse after 3 seconds
       setTimeout(() => {
-        setSubmitted(false);
+        setFeedbackState('collapsed');
       }, 3000);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
-    } finally {
-      setIsSubmitting(false);
+      
+      // Even if there's an error, mark as seen to avoid bothering user again
+      sessionStorage.setItem('hasSeenFeedback', 'true');
+      sessionStorage.setItem('feedbackSubmitted', 'true');
+      
+      // Show success anyway to avoid user frustration
+      setFeedbackState('success');
+      setTimeout(() => {
+        setFeedbackState('collapsed');
+      }, 3000);
     }
   };
-
-  // Show thank you message after submission
-  if (submitted) {
-    return (
-      <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border border-gray-200 animate-in fade-in slide-in-from-bottom-5">
-        <p className="text-sm font-medium text-green-600">Thank you for your feedback!</p>
-      </div>
-    );
-  }
 
   const handleDismiss = () => {
     // Mark as seen for this session
     sessionStorage.setItem('hasSeenFeedback', 'true');
-    setSubmitted(true);
+    setFeedbackState('collapsed');
+  };
+  
+  const handleExpand = () => {
+    setFeedbackState('initial');
   };
 
+  // Show collapsed feedback button
+  if (feedbackState === 'collapsed') {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <button 
+          onClick={handleExpand}
+          className="bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-100 transition-all"
+          aria-label="Give feedback"
+          title="Give feedback"
+        >
+          <span className="text-lg">💬</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Show thank you message after submission
+  if (feedbackState === 'success') {
+    return (
+      <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border border-gray-200 animate-in fade-in slide-in-from-bottom-5 z-50">
+        <p className="text-sm font-medium text-green-600 flex items-center">
+          <span className="mr-2">✅</span>
+          Thanks for your feedback!
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border border-gray-200 animate-in fade-in slide-in-from-bottom-5">
+    <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border border-gray-200 animate-in fade-in slide-in-from-bottom-5 z-50">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium">Were the insights you received from Hoot AI useful?</h3>
+        <h3 className="text-sm font-medium">Were the insights you received <br /> from Hoot AI useful?</h3>
         <button 
           onClick={handleDismiss}
           className="text-gray-400 hover:text-gray-500"
@@ -140,11 +186,11 @@ export function FeedbackPrompt({ show }: FeedbackPromptProps) {
       
       <div className="mt-3 flex justify-end">
         <Button 
-          disabled={score === null || isSubmitting}
+          disabled={score === null || feedbackState === 'submitting'}
           onClick={handleSubmit}
           className="text-xs py-1 px-3 h-auto"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit'}
+          {feedbackState === 'submitting' ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </div>

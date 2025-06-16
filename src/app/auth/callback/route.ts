@@ -1,151 +1,159 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
+    // Parse URL and get query parameters
     const requestUrl = new URL(request.url)
     
-    // Debug full URL and all parameters - for server logs only
-    console.log("Auth callback URL:", request.url)
-    console.log("Search params:", Object.fromEntries(requestUrl.searchParams.entries()))
-    
-    // Check for error parameters
+    // Check for errors from OAuth provider
     const error = requestUrl.searchParams.get('error')
     const errorDescription = requestUrl.searchParams.get('error_description')
     
     if (error) {
       console.error("OAuth error:", error, errorDescription)
-      return NextResponse.redirect(
-        new URL(`/auth/sign-in?error=${encodeURIComponent(errorDescription || error)}`, 
-        requestUrl.origin)
-      )
+      return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent(errorDescription || error)}`)
     }
     
-    // Get Supabase credentials from environment
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    // Get Supabase credentials
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("Missing Supabase credentials");
-      return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent("Server configuration error"), requestUrl.origin));
+      console.error("Missing Supabase credentials")
+      return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('Configuration error')}`)
     }
     
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true // This is important to capture auth data from URL
+        persistSession: false,
+        autoRefreshToken: false
       }
-    });
+    })
     
     // Try to get session from URL
     try {
-      console.log("Checking for session in URL...");
-      const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession()
       
       if (error) {
-        console.error("Error getting session:", error);
-        return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent(error.message), requestUrl.origin));
+        console.error("Error getting session:", error)
+        throw error
       }
       
-      if (!data?.session) {
-        console.error("No session found in URL");
+      if (!data.session) {
+        console.error("No session found in URL")
         
-        // Check for auth provider specific parameters
-        const code = requestUrl.searchParams.get('code');
-        const provider = requestUrl.searchParams.get('provider');
+        // Check for code parameter (PKCE flow)
+        const code = requestUrl.searchParams.get('code')
         
-        if (code && provider) {
-          console.log(`Found auth code for provider: ${provider}`);
-          // Handle the code flow case
-          try {
-            const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (exchangeError) {
-              console.error("Error exchanging code for session:", exchangeError);
-              return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent(exchangeError.message), requestUrl.origin));
-            }
-            
-            if (exchangeData?.session) {
-              console.log("Session created from code exchange:", exchangeData.session.user.id);
-              
-              // Get the site URL from environment or use the origin
-              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
-              console.log("Using site URL for redirect:", siteUrl);
-              
-              // Create response with session cookies
-              const response = NextResponse.redirect(new URL('/', siteUrl));
-              
-              // Set cookies to help with auth state persistence
-              response.cookies.set('auth_success', 'true', { 
-                maxAge: 60 * 60, // 1 hour
-                path: '/',
-                httpOnly: false,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax'
-              });
-              
-              response.cookies.set('user_id', exchangeData.session.user.id, { 
-                maxAge: 60 * 60, // 1 hour
-                path: '/',
-                httpOnly: false,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax'
-              });
-              
-              return response;
-            }
-          } catch (exchangeErr) {
-            console.error("Error during code exchange:", exchangeErr);
-          }
+        if (!code) {
+          return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('No authentication code found')}`)
         }
         
-        // Special case: Check if we have a hash fragment
-        const responseUrl = new URL('/auth/capture', requestUrl.origin);
-        
-        // Pass along any query parameters
-        requestUrl.searchParams.forEach((value, key) => {
-          responseUrl.searchParams.append(key, value);
-        });
-        
-        console.log("Redirecting to capture page to handle hash fragment");
-        return NextResponse.redirect(responseUrl);
+        // Try to exchange code for session
+        try {
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (exchangeError) {
+            console.error("Error exchanging code for session:", exchangeError)
+            return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('Authentication failed')}`)
+          }
+          
+          if (!exchangeData.session) {
+            return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('No session created')}`)
+          }
+          
+          // Get provider from session
+          const provider = exchangeData.session.user?.app_metadata?.provider || 'unknown'
+          
+          // Set cookies for server-side auth
+          const cookieStore = cookies()
+          cookieStore.set('sb-access-token', exchangeData.session.access_token, { 
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 // 1 hour
+          })
+          
+          // Set user ID cookie for convenience
+          cookieStore.set('user_id', exchangeData.session.user.id, {
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+          })
+          
+          // Set auth success flag
+          cookieStore.set('auth_success', 'true', {
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 // 1 day
+          })
+          
+          // Determine site URL for redirect
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
+          
+          // Redirect to home page
+          return NextResponse.redirect(siteUrl)
+        } catch (exchangeErr) {
+          console.error("Error during code exchange:", exchangeErr)
+          return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('Authentication failed')}`)
+        }
       }
       
-      console.log("Session found with user ID:", data.session.user.id);
+      // Check for hash fragment (implicit flow)
+      // For hash fragments, we need special handling because they're not sent to the server
+      // We'll redirect to a client-side handler that can process the hash
+      if (requestUrl.hash || requestUrl.searchParams.has('type') && requestUrl.searchParams.get('type') === 'recovery') {
+        // Redirect to capture page to handle hash fragment
+        return NextResponse.redirect(`${requestUrl.origin}/auth/capture${requestUrl.search}${requestUrl.hash}`)
+      }
       
-      // Get the site URL from environment or use the origin
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
-      console.log("Using site URL for redirect:", siteUrl);
-      
-      // Create response with session cookies
-      const response = NextResponse.redirect(new URL('/', siteUrl));
-      
-      // Set cookies to help with auth state persistence
-      response.cookies.set('auth_success', 'true', { 
-        maxAge: 60 * 60, // 1 hour
-        path: '/',
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
-      
-      response.cookies.set('user_id', data.session.user.id, { 
-        maxAge: 60 * 60, // 1 hour
-        path: '/',
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
-      
-      return response;
+      // If we have a session directly, use it
+      if (data.session) {
+        // Set cookies for server-side auth
+        const cookieStore = cookies()
+        cookieStore.set('sb-access-token', data.session.access_token, { 
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 // 1 hour
+        })
+        
+        // Set user ID cookie for convenience
+        cookieStore.set('user_id', data.session.user.id, {
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7 // 7 days
+        })
+        
+        // Set auth success flag
+        cookieStore.set('auth_success', 'true', {
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 // 1 day
+        })
+        
+        // Determine site URL for redirect
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
+        
+        // Redirect to home page
+        return NextResponse.redirect(siteUrl)
+      }
     } catch (error) {
-      console.error("Unexpected error processing session:", error);
-      return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent("Session processing error"), requestUrl.origin));
+      console.error("Unexpected error processing session:", error)
     }
+    
+    // If we get here, something went wrong
+    return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('Authentication failed')}`)
   } catch (error) {
-    console.error("Unexpected error in auth callback:", error);
-    return NextResponse.redirect(new URL('/auth/sign-in?error=' + encodeURIComponent("Internal server error"), new URL(request.url).origin));
+    console.error("Unexpected error in auth callback:", error)
+    const requestUrl = new URL(request.url)
+    return NextResponse.redirect(`${requestUrl.origin}/auth/sign-in?error=${encodeURIComponent('An unexpected error occurred')}`)
   }
 } 

@@ -23,9 +23,6 @@ export default function AuthCheckPage() {
   }, [])
   
   useEffect(() => {
-    // Log the current state immediately
-    console.log(`Auth state: loading=${loading}, user=${user ? 'exists' : 'null'}, error=${error || 'none'}`)
-    
     // Get auth context details
     try {
       setAuthContextDebug(`

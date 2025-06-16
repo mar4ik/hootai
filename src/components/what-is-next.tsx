@@ -46,28 +46,18 @@ export default function WhatIsNextContent() {
         formRef.current
       );
       
-      console.log('Email sent successfully!', result);
-      
       setSubmitSuccess(true);
       setFormData({ name: '', email: '', message: '' });
       
       // Reset success message after 3 seconds
       setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (error) {
-      console.error('Error sending email:', error);
-      
       // More detailed error reporting
       if (error instanceof Error) {
         setSubmitError(`Error (${error.name}): ${error.message}`);
-        console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
       } else if (typeof error === 'object' && error !== null) {
         const errorObj = error as { status?: string | number; text?: string };
         setSubmitError(`Error (${errorObj.status || 'unknown'}): ${errorObj.text || 'Unknown error'}`);
-        console.error('Error object:', errorObj);
       } else {
         setSubmitError(`Unknown error: ${String(error)}`);
       }

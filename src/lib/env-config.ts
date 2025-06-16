@@ -34,6 +34,12 @@ export const isDevelopment = (): boolean => {
  * Get the appropriate site URL based on the current environment
  */
 export const getSiteUrl = (): string => {
+  // CRITICAL: Always use the current origin if available
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  
+  // Fallback to environment-specific URL if not in browser
   const dev = isDevelopment();
   const url = dev ? SITE_URLS.development : SITE_URLS.production;
   return url;
@@ -44,9 +50,14 @@ export const getSiteUrl = (): string => {
  * This is used for OAuth redirects
  */
 export const getAuthCallbackUrl = (): string => {
-  // Always use /auth/callback as the callback path
-  const callbackUrl = `${getSiteUrl()}/auth/callback`;
-  return callbackUrl;
+  // CRITICAL: Always use the current origin for the callback URL to prevent cross-domain redirects
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/auth/capture`;
+  }
+  
+  // Fallback to environment-specific URL if not in browser
+  const siteUrl = getSiteUrl();
+  return `${siteUrl}/auth/capture`;
 };
 
 /**
@@ -61,8 +72,6 @@ export const storeEnvironmentInfo = (): void => {
   localStorage.setItem('local_origin', window.location.origin);
   localStorage.setItem('dev_port', window.location.port || '3000');
   
-  // Only set force_local_redirect when in development
-  if (isLocal) {
-    localStorage.setItem('force_local_redirect', 'true');
-  }
+  // CRITICAL: Always force redirect to the current origin
+  localStorage.setItem('force_local_redirect', 'true');
 }; 

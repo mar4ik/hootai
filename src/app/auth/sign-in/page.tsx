@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { getAuthCallbackUrl, storeEnvironmentInfo, SUPABASE_CONFIG } from "@/lib/env-config"
+import { createClient } from "@supabase/supabase-js"
 
 // Component to handle URL params - isolated to ensure proper Suspense boundary
 function ParamsHandler({ onParamsReady }: { 
@@ -195,18 +196,49 @@ function SignInContent() {
         localStorage.setItem('auth_return_to', returnTo);
       }
       
-      // Get the appropriate callback URL based on environment
-      const redirectTo = getAuthCallbackUrl();
+      // Get Supabase client
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
       
-      // Create Google auth URL with specific redirect parameters
-      const supabaseAuthUrl = SUPABASE_CONFIG.url;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Missing Supabase configuration");
+      }
       
-      // Build the auth URL with proper parameters
-      const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+      // Get the current origin for local development, or use production URL
+      const isLocalhost = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       
-      // Redirect browser directly to Google auth
-      window.location.href = googleAuthUrl;
-      return;
+      // Use the appropriate redirect URL based on environment
+      const redirectTo = isLocalhost 
+        ? `${window.location.origin}/auth/capture`
+        : `https://hootai.am/auth/capture`;
+      
+      // Create a temporary Supabase client for sign-in
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: false, // Disable auto refresh to prevent lock issues
+          persistSession: true,
+          flowType: 'implicit', // Use implicit flow instead of PKCE to avoid code verifier issues
+        }
+      });
+      
+      // Use the Supabase client to sign in with Google
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectTo, // Use environment-specific redirect URL
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // The page will redirect to Google, so we don't need to do anything else here
     } catch (error) {
       setMessage({ 
         type: "error", 

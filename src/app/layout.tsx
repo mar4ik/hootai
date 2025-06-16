@@ -26,27 +26,33 @@ function ForceRedirectCheck() {
                 const hostname = window.location.hostname;
                 const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
                 
-                if (!isLocalhost) {
-                  // Check if we have any indication we should be on localhost
-                  const hasLocalOrigin = localStorage.getItem('local_origin');
-                  const isDevMode = localStorage.getItem('dev_mode') === 'true';
-                  const forceRedirect = localStorage.getItem('force_local_redirect') === 'true';
-                  
-                  // Don't redirect if we're on an auth page (sign-in, sign-up, etc.)
-                  const isAuthPage = window.location.pathname.startsWith('/auth/');
-                  
-                  if ((hasLocalOrigin || isDevMode || forceRedirect) && !isAuthPage) {
-                    // Get local origin or fallback to localhost:3000
-                    const localOrigin = localStorage.getItem('local_origin') || 
-                                      'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
-                    
-                    // Preserve the current path in the redirect
-                    const currentPath = window.location.pathname + window.location.search + window.location.hash;
-                    const redirectUrl = localOrigin + currentPath;
-                    
-                    window.location.href = redirectUrl;
-                  }
+                // Prevent redirect loops by checking if we've redirected recently
+                const lastRedirectTime = parseInt(sessionStorage.getItem('last_redirect_time') || '0');
+                const now = Date.now();
+                const redirectCooldown = 10000; // 10 seconds
+                
+                // If we've redirected in the last 10 seconds, don't redirect again
+                if (now - lastRedirectTime < redirectCooldown) {
+                  // Clear any problematic flags to prevent future redirects
+                  localStorage.removeItem('local_origin');
+                  localStorage.removeItem('dev_mode');
+                  localStorage.removeItem('force_local_redirect');
+                  return;
                 }
+                
+                // Don't redirect if we're on an auth page
+                const isAuthPage = window.location.pathname.startsWith('/auth/');
+                if (isAuthPage) {
+                  // Clear any problematic flags to prevent future redirects
+                  localStorage.removeItem('local_origin');
+                  localStorage.removeItem('dev_mode');
+                  localStorage.removeItem('force_local_redirect');
+                  return;
+                }
+                
+                // DISABLE ALL REDIRECTS - USERS SHOULD STAY ON THE DOMAIN THEY'RE ON
+                // This comment is left here to indicate we've intentionally disabled redirects
+                // to prevent issues with authentication
               }
             } catch (e) {
               // Silently handle errors

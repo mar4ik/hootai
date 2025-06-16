@@ -15,7 +15,8 @@ export default function NotFound() {
             alt="Hoot.ai Logo" 
             width={80} 
             height={80} 
-            className="h-20 w-20" 
+            className="h-20 w-20"
+            priority 
           />
         </div>
         <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>

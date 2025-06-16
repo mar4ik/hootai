@@ -11,24 +11,19 @@ import { getUserProfile, updateUserProfile, UserProfile, ensureUserProfile, chec
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
+import { PageLayout } from "@/components/page-layout"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Check if we're in development mode
 const _isDevelopment = process.env.NODE_ENV === 'development';
 // Check if running in browser
 const isBrowser = typeof window !== 'undefined';
 
-// Add debug logs for profile page load
-if (isBrowser) {
-  console.log('Profile page loading in browser environment');
-  
-  // Check for auth cookies to help debug
-  const hasAuthCookie = document.cookie.split(';').some(c => 
-    c.trim().startsWith('auth_success=') || 
-    c.trim().includes('sb-') || 
-    c.trim().startsWith('user_id='));
-  
-  console.log('Auth cookies present:', hasAuthCookie);
-}
+// Check for auth cookies to help debug
+const hasAuthCookie = isBrowser && document.cookie.split(';').some(c => 
+  c.trim().startsWith('auth_success=') || 
+  c.trim().includes('sb-') || 
+  c.trim().startsWith('user_id='));
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
@@ -67,22 +62,17 @@ export default function ProfilePage() {
     setErrorMessage("Manually loading profile...")
     
     try {
-      console.log(`Manual profile load started for user: ${user.id}`);
-      
       // First check if profile exists
       const exists = await checkProfileExists(user.id);
-      console.log(`Profile exists check result: ${exists}`);
       
       // Always try to ensure profile exists regardless of check result
       const profile = await ensureUserProfile(user.id)
-      console.log(`Profile ensure result:`, profile);
       
       // Wait a moment for database to update
       await new Promise(resolve => setTimeout(resolve, 1500))
       
       // Try to load the profile
       const userProfile = await getUserProfile(user.id)
-      console.log(`Get profile result:`, userProfile);
       
       if (userProfile) {
         setProfile(userProfile)
@@ -99,7 +89,6 @@ export default function ProfilePage() {
         }
       } else {
         // One more retry attempt with direct database access
-        console.log("Retrying profile load with direct access");
         
         // Wait a bit longer
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -136,19 +125,14 @@ export default function ProfilePage() {
     async function loadProfile() {
       if (user) {
         try {
-          console.log("Loading profile for user:", user.id)
-          
           // For production reliability, always ensure the profile exists first
-          console.log("Creating/ensuring profile first for maximum reliability")
           const profile = await ensureUserProfile(user.id)
-          console.log("Profile ensure result:", profile)
           
           // Wait a moment for database to update
           await new Promise(resolve => setTimeout(resolve, 1500))
           
           // Then load the profile
           const userProfile = await getUserProfile(user.id)
-          console.log("Profile load result:", userProfile);
           
           if (!userProfile) {
             console.error("Profile not found after loading")
@@ -156,7 +140,6 @@ export default function ProfilePage() {
             return
           }
           
-          console.log("Profile loaded:", userProfile)
           setProfile(userProfile)
           setErrorMessage(null)
           setProfileLoaded(true)
@@ -185,8 +168,6 @@ export default function ProfilePage() {
     setErrorMessage("Fixing profile...")
     
     try {
-      console.log(`Starting profile fix for user: ${user.id}`);
-      
       // Delete existing profile if any to avoid conflicts (production specific fix)
       let attempts = 0;
       const maxAttempts = 3;
@@ -194,7 +175,6 @@ export default function ProfilePage() {
       
       while (attempts < maxAttempts && !newProfile) {
         attempts++;
-        console.log(`Profile creation attempt ${attempts}/${maxAttempts}`);
         
         // Create a fresh profile
         newProfile = await ensureUserProfile(user.id);
@@ -206,7 +186,6 @@ export default function ProfilePage() {
       }
       
       if (newProfile) {
-        console.log("Profile created or found:", newProfile)
         setProfile(newProfile)
         setDisplayName(newProfile.display_name || '')
         setBio(newProfile.bio || '')
@@ -245,62 +224,32 @@ export default function ProfilePage() {
     setSaveAttempts(prev => prev + 1)
     
     try {
-      console.log(`Profile save attempt ${saveAttempts + 1} for user:`, user.id, {
-        display_name: displayName,
-        bio: bio
-      })
+      // Try to save the profile with retries
+      let saveAttempts = 0;
+      const maxAttempts = 3;
+      let saved = false;
       
-      // First ensure the profile exists
-      const profileExists = await checkProfileExists(user.id)
-      console.log(`Profile exists check before save: ${profileExists}`);
-      
-      if (!profileExists) {
-        console.log("Profile does not exist before save, creating it first")
-        const createResult = await ensureUserProfile(user.id)
-        console.log("Profile creation result:", createResult);
-        
-        // Wait a moment to let the creation complete if needed
-        await new Promise(resolve => setTimeout(resolve, 1500))
-      }
-      
-      // Now update the profile
-      const updatedProfile = await updateUserProfile(user.id, {
-        display_name: displayName,
-        bio: bio
-      })
-      
-      if (updatedProfile) {
-        console.log("Profile updated successfully:", updatedProfile)
-        setProfile(updatedProfile)
-        setIsEditing(false)
-        setErrorMessage(null)
-        if (isBrowser) {
-          toast({
-            title: "Profile saved",
-            description: "Your profile has been updated successfully.",
-            variant: "default"
-          })
-        }
-      } else {
-        console.error("Profile update returned null")
-        
-        // Create profile directly with data as a fallback
-        const fallbackProfile = await ensureUserProfile(user.id)
-        console.log("Fallback profile creation result:", fallbackProfile);
-        
-        if (fallbackProfile) {
-          // Wait a moment then try direct update again
-          await new Promise(resolve => setTimeout(resolve, 1500))
+      while (saveAttempts < maxAttempts && !saved) {
+        try {
+          // Check if profile exists
+          const profileExists = await checkProfileExists(user.id);
           
-          // Special direct update bypassing the existing logic
-          const directUpdateResult = await updateUserProfile(user.id, {
+          if (!profileExists) {
+            // Create profile if it doesn't exist
+            const createResult = await ensureUserProfile(user.id, {
+              display_name: displayName,
+              bio: bio
+            });
+          }
+          
+          // Update the profile
+          const updatedProfile = await updateUserProfile(user.id, {
             display_name: displayName,
             bio: bio
-          })
+          });
           
-          if (directUpdateResult) {
-            console.log("Profile update succeeded via fallback method:", directUpdateResult)
-            setProfile(directUpdateResult)
+          if (updatedProfile) {
+            setProfile(updatedProfile)
             setIsEditing(false)
             setErrorMessage(null)
             if (isBrowser) {
@@ -310,12 +259,55 @@ export default function ProfilePage() {
                 variant: "default"
               })
             }
+            saved = true;
+            break;
           } else {
-            setErrorMessage("Unable to save profile. Please try refreshing the page and trying again.")
+            console.error("Profile update returned null")
+            
+            // Try a fallback approach - direct profile creation
+            const directResult = await ensureUserProfile(user.id, {
+              display_name: displayName,
+              bio: bio
+            });
+            
+            if (directResult) {
+              // Try direct update one more time
+              const directUpdateResult = await updateUserProfile(user.id, {
+                display_name: displayName,
+                bio: bio
+              });
+              
+              if (directUpdateResult) {
+                setProfile(directUpdateResult)
+                setIsEditing(false)
+                setErrorMessage(null)
+                if (isBrowser) {
+                  toast({
+                    title: "Profile saved (fallback)",
+                    description: "Your profile has been updated using an alternative method.",
+                    variant: "default"
+                  })
+                }
+                saved = true;
+                break;
+              }
+              
+              console.error("Profile update succeeded via fallback method:", directUpdateResult)
+            } else {
+              setErrorMessage("Unable to save profile. Please try refreshing the page and trying again.")
+            }
           }
-        } else {
-          setErrorMessage("Unable to save profile. Please try fixing your profile first.")
+        } catch (error) {
+          console.error("Error saving profile:", error)
         }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        saveAttempts++;
+      }
+      
+      if (!saved) {
+        setErrorMessage("Unable to save profile. Please try fixing your profile first.")
       }
     } catch (error) {
       console.error("Error saving profile:", error)
@@ -370,7 +362,6 @@ export default function ProfilePage() {
     )
   }
 
-  // Show content if authenticated
   if (user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -499,6 +490,16 @@ export default function ProfilePage() {
     )
   }
 
-  // This should never render, but just in case
-  return null
+  // Fallback for when user is not authenticated
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="text-center max-w-md w-full bg-white rounded-xl shadow-md p-6">
+        <h1 className="text-2xl font-bold mb-4">Sign In Required</h1>
+        <p className="text-gray-600 mb-6">Please sign in to view and edit your profile.</p>
+        <Link href="/auth/sign-in">
+          <Button>Sign In</Button>
+        </Link>
+      </div>
+    </div>
+  )
 } 
