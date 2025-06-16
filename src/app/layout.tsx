@@ -49,6 +49,9 @@ export default function RootLayout({
               (function() {
                 try {
                   // PREVENT PRODUCTION ACCESS IN DEV MODE
+                  console.log("🔍 ROOT LAYOUT - Immediate redirect check running");
+                  console.log("🔍 Current location:", window.location.href);
+                  console.log("🔍 Current hostname:", window.location.hostname);
                   
                   // When on localhost, store flags
                   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -57,6 +60,13 @@ export default function RootLayout({
                     localStorage.setItem('dev_port', window.location.port || '3000');
                     localStorage.setItem('local_origin', window.location.origin);
                     localStorage.setItem('force_local_redirect', 'true');
+                    
+                    console.log("🔍 Set localStorage flags:", {
+                      dev_mode: localStorage.getItem('dev_mode'),
+                      local_origin: localStorage.getItem('local_origin'),
+                      dev_port: localStorage.getItem('dev_port'),
+                      force_local_redirect: localStorage.getItem('force_local_redirect')
+                    });
                   }
                   
                   // If we're on the production site but in dev mode, redirect back to localhost
@@ -64,6 +74,12 @@ export default function RootLayout({
                       (localStorage.getItem('dev_mode') === 'true' || localStorage.getItem('force_local_redirect') === 'true')) {
                     
                     console.log("🛑 PRODUCTION SITE DETECTED WHEN IN DEV MODE - REDIRECTING TO LOCALHOST");
+                    console.log("🔍 localStorage values:", {
+                      dev_mode: localStorage.getItem('dev_mode'),
+                      local_origin: localStorage.getItem('local_origin'),
+                      dev_port: localStorage.getItem('dev_port'),
+                      force_local_redirect: localStorage.getItem('force_local_redirect')
+                    });
                     
                     // Get local development origin - fallback to port 3000
                     const port = localStorage.getItem('dev_port') || '3000';
@@ -74,6 +90,8 @@ export default function RootLayout({
                                          window.location.search.includes('token=') || 
                                          window.location.search.includes('access_token=') ||
                                          window.location.hash.includes('access_token=');
+                    
+                    console.log("🔍 Auth params check:", { hasAuthParams });
                     
                     // Auth callback requires special handling - redirect with all parameters
                     if (hasAuthParams) {
@@ -100,6 +118,8 @@ export default function RootLayout({
                       window.location.href = localOrigin + '/';
                       return; // Stop execution to prevent any further processing
                     }
+                  } else {
+                    console.log("✅ No redirect needed - either not on production or not in dev mode");
                   }
                 } catch (e) {
                   console.error('Error in immediate redirect check:', e);

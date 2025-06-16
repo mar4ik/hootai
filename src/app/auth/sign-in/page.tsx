@@ -160,13 +160,9 @@ function SignInContent() {
     try {
       setIsLoading(true)
       
-      // Save return_to info to localStorage so callback can use it
-      if (returnTo) {
-        localStorage.setItem('auth_return_to', returnTo)
-      }
-      
       // Check if we're in a local environment
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      console.log("🔍 handleGoogleSignIn - isLocalhost:", isLocalhost);
       
       // For localhost, we need special handling to prevent redirection to production
       if (isLocalhost) {
@@ -181,6 +177,14 @@ function SignInContent() {
           localStorage.setItem('auth_return_to', returnTo);
         }
         
+        console.log("🔍 Set localStorage flags:", {
+          dev_mode: localStorage.getItem('dev_mode'),
+          local_origin: localStorage.getItem('local_origin'),
+          dev_port: localStorage.getItem('dev_port'),
+          force_local_redirect: localStorage.getItem('force_local_redirect'),
+          auth_return_to: localStorage.getItem('auth_return_to')
+        });
+        
         // Explicitly use the full callback URL with the origin
         const redirectTo = `${window.location.origin}/auth/login-callback`;
         
@@ -192,9 +196,10 @@ function SignInContent() {
         const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
         
         // Log for debugging
-        console.log('Using localhost Google auth URL:', googleAuthUrl);
+        console.log('🔍 Using localhost Google auth URL:', googleAuthUrl);
         
         // Redirect browser directly to Google auth
+        console.log('🔄 Redirecting to Google auth URL...');
         window.location.href = googleAuthUrl;
         return;
       }

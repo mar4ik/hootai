@@ -19,10 +19,21 @@ function ImmediateRedirectCheck() {
               // EMERGENCY REDIRECT FOR DEV MODE
               // If on production but should be on localhost, redirect immediately
               
+              console.log("🔍 DEBUG - ImmediateRedirectCheck running");
+              console.log("🔍 Current hostname:", window.location.hostname);
+              console.log("🔍 localStorage values:", {
+                dev_mode: localStorage.getItem('dev_mode'),
+                local_origin: localStorage.getItem('local_origin'),
+                dev_port: localStorage.getItem('dev_port'),
+                force_local_redirect: localStorage.getItem('force_local_redirect')
+              });
+              
               // Check if this is a callback on the production site but we should be on localhost
               const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
               const isDevMode = localStorage.getItem('dev_mode') === 'true';
               const hasLocalOrigin = !!localStorage.getItem('local_origin');
+              
+              console.log("🔍 Checks:", { isProdSite, isDevMode, hasLocalOrigin });
               
               if (isProdSite && (isDevMode || hasLocalOrigin)) {
                 console.log("⚠️ AUTH CALLBACK ON PRODUCTION SITE DETECTED - FORCING REDIRECT TO LOCALHOST");
@@ -49,7 +60,7 @@ function ImmediateRedirectCheck() {
         `
       }}
     />
-  );
+  )
 }
 
 // ContentWrapper component that properly handles params
@@ -63,14 +74,27 @@ function ContentWithParams() {
       try {
         // CRITICAL CHECK: If we're on production but should be on localhost, redirect immediately
         if (typeof window !== 'undefined') {
+          console.log("🔍 DEBUG - ContentWithParams useEffect running");
+          console.log("🔍 Current hostname:", window.location.hostname);
+          console.log("🔍 localStorage values:", {
+            dev_mode: localStorage.getItem('dev_mode'),
+            local_origin: localStorage.getItem('local_origin'),
+            dev_port: localStorage.getItem('dev_port'),
+            force_local_redirect: localStorage.getItem('force_local_redirect')
+          });
+          
           const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
           const isDevMode = localStorage.getItem('dev_mode') === 'true';
           const hasLocalOrigin = !!localStorage.getItem('local_origin');
+          
+          console.log("🔍 Checks:", { isProdSite, isDevMode, hasLocalOrigin });
           
           if (isProdSite && (isDevMode || hasLocalOrigin)) {
             console.log("⚠️ CRITICAL: Auth callback running on production in dev mode!");
             const localOrigin = localStorage.getItem('local_origin') || 
                                'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
+            
+            console.log("🔄 Redirecting to local origin:", localOrigin);
             window.location.href = `${localOrigin}/auth/login-callback${window.location.search}${window.location.hash}`;
             return; // Stop execution - we're redirecting
           }
@@ -158,6 +182,13 @@ function ContentWithParams() {
         const currentIsLocal = window.location.hostname === 'localhost' || 
                               window.location.hostname === '127.0.0.1';
         
+        console.log("🔍 DEBUG - handleRedirect", { 
+          isLocalDev, 
+          localOrigin, 
+          currentIsLocal,
+          hostname: window.location.hostname
+        });
+        
         if (isLocalDev && localOrigin) {
           // For local development, redirect to local origin
           console.log("Redirecting to local origin:", localOrigin);
@@ -180,49 +211,54 @@ function ContentWithParams() {
     
     handleCallback()
   }, [searchParams])
-  
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Authentication</h1>
-          {status === "loading" && (
-            <>
-              <div className="flex justify-center mb-4">
-                <div className="w-8 h-8 border-4 border-t-blue-500 border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin"></div>
-              </div>
-              <p className="text-gray-600">Completing your sign-in...</p>
-            </>
-          )}
-          
-          {status === "success" && (
-            <>
-              <div className="bg-green-50 p-4 rounded-md mb-4">
-                <p className="text-green-700 font-medium">Successfully signed in!</p>
-                <p className="text-sm text-green-600 mt-2">
-                  Redirecting you...
-                </p>
-              </div>
-            </>
-          )}
-          
-          {status === "error" && (
-            <>
-              <div className="bg-red-50 p-4 rounded-md mb-4">
-                <p className="text-red-700 font-medium">Authentication failed</p>
-                {errorMessage && (
-                  <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
-                )}
-              </div>
-              <div className="flex justify-center space-x-4">
-                <Link href="/auth/sign-in" className="text-blue-600 hover:underline">
-                  Try again
-                </Link>
-              </div>
-            </>
-          )}
+
+  // Render loading state
+  if (status === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <div className="w-12 h-12 border-4 border-t-blue-500 border-b-transparent border-l-transparent border-r-transparent rounded-full animate-spin mb-4"></div>
+        <h2 className="text-xl font-semibold mb-2">Processing login...</h2>
+        <p className="text-gray-600">Please wait while we complete your authentication</p>
+      </div>
+    )
+  }
+
+  // Render error state
+  if (status === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <div className="p-3 bg-red-100 rounded-full mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold mb-2">Authentication Error</h2>
+        <p className="text-gray-600 mb-4">{errorMessage || "Failed to authenticate. Please try again."}</p>
+        <div className="flex gap-4">
+          <Link href="/auth/sign-in" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            Try Again
+          </Link>
+          <Link href="/" className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+            Go Home
+          </Link>
         </div>
       </div>
+    )
+  }
+
+  // Render success state (though this should redirect automatically)
+  return (
+    <div className="flex flex-col items-center justify-center p-8">
+      <div className="p-3 bg-green-100 rounded-full mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-semibold mb-2">Authentication Successful!</h2>
+      <p className="text-gray-600 mb-4">You are now signed in. Redirecting...</p>
+      <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        Continue to Home
+      </Link>
     </div>
   )
 }
