@@ -216,8 +216,8 @@ function SignInContent() {
         const supabaseAuthUrl = 'https://eaennrqqtlmanbivdhqm.supabase.co';
         
         // Create Google auth URL with specific redirect parameters
-        // Use localhost:3000 as the redirect URL in the request to Supabase
-        const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+        // Use localhost URL as the redirect URL in the request to Supabase
+        const googleAuthUrl = `${supabaseAuthUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&redirect_url_is_localhost=true`;
         
         // Log for debugging
         console.log('🔍 Using localhost Google auth URL:', googleAuthUrl);

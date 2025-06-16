@@ -77,10 +77,11 @@ export default function RootLayout({
                   }
                   
                   // If we're on the production site but in dev mode, redirect back to localhost
-                  if ((window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am') && 
+                  if ((window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am' || 
+                       !window.location.hostname.includes('localhost')) && 
                       (localStorage.getItem('dev_mode') === 'true' || localStorage.getItem('force_local_redirect') === 'true')) {
                     
-                    console.log("🛑 PRODUCTION SITE DETECTED WHEN IN DEV MODE - REDIRECTING TO LOCALHOST");
+                    console.log("🛑 NON-LOCALHOST SITE DETECTED WHEN IN DEV MODE - REDIRECTING TO LOCALHOST");
                     console.log("🔍 localStorage values:", {
                       dev_mode: localStorage.getItem('dev_mode'),
                       local_origin: localStorage.getItem('local_origin'),

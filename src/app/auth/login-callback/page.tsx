@@ -93,13 +93,15 @@ function ContentWithParams() {
           const isProdSite = window.location.hostname === 'www.hootai.am' || window.location.hostname === 'hootai.am';
           const isDevMode = localStorage.getItem('dev_mode') === 'true';
           const hasLocalOrigin = !!localStorage.getItem('local_origin');
+          const localOrigin = localStorage.getItem('local_origin') || 
+                             'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
           
           console.log("🔍 Checks:", { isProdSite, isDevMode, hasLocalOrigin });
           
-          if (isProdSite && (isDevMode || hasLocalOrigin)) {
-            console.log("⚠️ CRITICAL: Auth callback running on production in dev mode!");
-            const localOrigin = localStorage.getItem('local_origin') || 
-                               'http://localhost:' + (localStorage.getItem('dev_port') || '3000');
+          // Check if we should redirect to localhost
+          if ((isProdSite || !window.location.hostname.includes('localhost')) && 
+              (isDevMode || hasLocalOrigin)) {
+            console.log("⚠️ CRITICAL: Auth callback running on non-localhost in dev mode!");
             
             console.log("🔄 Redirecting to local origin:", localOrigin);
             window.location.href = `${localOrigin}/auth/login-callback${window.location.search}${window.location.hash}`;
